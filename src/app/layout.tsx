@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ClerkProvider } from '@clerk/nextjs'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
@@ -27,10 +28,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`scroll-smooth ${plusJakartaSans.variable}`}>
-      <body className={`${plusJakartaSans.className} antialiased bg-white text-[#0F172A]`}>
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className={`scroll-smooth ${plusJakartaSans.variable}`}>
+        <body className={`${plusJakartaSans.className} antialiased bg-white text-[#0F172A]`}>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   )
 }

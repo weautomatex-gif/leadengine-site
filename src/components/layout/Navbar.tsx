@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 
 const navLinks = [
   { label: 'Features', href: '#features' },
@@ -49,20 +50,32 @@ export default function Navbar() {
 
         {/* Desktop CTA */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="#"
-            className="text-sm font-medium text-[#64748B] hover:text-[#0F172A] transition-colors duration-200"
-          >
-            Log in
-          </Link>
-          <motion.a
-            href="#hero-cta"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center px-4 py-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold rounded-lg transition-colors duration-200 shadow-sm"
-          >
-            Get Started Free
-          </motion.a>
+          <SignedOut>
+            <Link
+              href="/sign-in"
+              className="text-sm font-medium text-[#64748B] hover:text-[#0F172A] transition-colors duration-200"
+            >
+              Log in
+            </Link>
+            <Link href="/sign-up" passHref>
+              <motion.a
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                className="inline-flex items-center px-4 py-2 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold rounded-lg transition-colors duration-200 shadow-sm"
+              >
+                Get Started Free
+              </motion.a>
+            </Link>
+          </SignedOut>
+          <SignedIn>
+            <Link
+              href="/dashboard"
+              className="text-sm font-medium text-[#64748B] hover:text-[#0F172A] transition-colors duration-200 mr-2"
+            >
+              Dashboard
+            </Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
 
         {/* Mobile Hamburger */}
@@ -112,16 +125,30 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="border-t border-[#E2E8F0] pt-4 flex flex-col gap-3">
-                <Link href="#" className="text-sm font-medium text-[#64748B]">
-                  Log in
-                </Link>
-                <a
-                  href="#hero-cta"
-                  onClick={() => setMobileOpen(false)}
-                  className="inline-flex items-center justify-center px-4 py-2.5 bg-[#3B82F6] text-white text-sm font-semibold rounded-lg"
-                >
-                  Get Started Free
-                </a>
+                <SignedOut>
+                  <Link href="/sign-in" onClick={() => setMobileOpen(false)} className="text-sm font-medium text-[#64748B]">
+                    Log in
+                  </Link>
+                  <Link
+                    href="/sign-up"
+                    onClick={() => setMobileOpen(false)}
+                    className="inline-flex items-center justify-center px-4 py-2.5 bg-[#3B82F6] text-white text-sm font-semibold rounded-lg"
+                  >
+                    Get Started Free
+                  </Link>
+                </SignedOut>
+                <SignedIn>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setMobileOpen(false)}
+                    className="text-sm font-medium text-[#64748B] py-1 hover:text-[#0F172A] transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <div className="pt-2">
+                    <UserButton afterSignOutUrl="/" />
+                  </div>
+                </SignedIn>
               </div>
             </div>
           </motion.div>
