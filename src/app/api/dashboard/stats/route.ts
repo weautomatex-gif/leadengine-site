@@ -21,14 +21,15 @@ export async function GET() {
       .select('id, name, target_industry, location, leads_found, status, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-    
+
     const campaignIds = campaigns?.map(c => c.id) || []
-    
+
     let totalLeads = 0
     let emailsFound = 0
     let draftsReady = 0
     let recentLeads: any[] = []
     let chartData: any[] = []
+    let topNiche = ''
 
     if (campaignIds.length > 0) {
       // Get all leads for summary stats
@@ -37,13 +38,11 @@ export async function GET() {
         .select('id, email, draft_body, created_at, category')
         .in('campaign_id', campaignIds)
 
-      let topNiche = ''
-
       if (allLeads) {
         totalLeads = allLeads.length
         emailsFound = allLeads.filter(l => !!l.email).length
         draftsReady = allLeads.filter(l => !!l.draft_body).length
-        
+
         // Compute chart data for current month
         const chartDataMap = new Map<string, number>()
         const currentMonth = new Date().getMonth()
