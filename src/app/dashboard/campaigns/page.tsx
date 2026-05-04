@@ -137,6 +137,9 @@ export default function CampaignsPage() {
                     const found = campaign.leads_found || 0
                     const percent = Math.min(100, Math.round((found / maxLeads) * 100))
                     
+                    const isStale = campaign.status === 'running' && found === 0 && (new Date().getTime() - new Date(campaign.created_at).getTime()) > 10 * 60 * 1000
+                    const displayStatus = isStale ? 'failed' : campaign.status
+                    
                     return (
                       <tr key={campaign.id} className="hover:bg-[#F8FAFC] transition-colors group">
                         <td className="px-8 py-6">
@@ -169,7 +172,7 @@ export default function CampaignsPage() {
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <StatusBadge status={campaign.status} />
+                          <StatusBadge status={displayStatus} />
                         </td>
                         <td className="px-8 py-6 text-xs font-bold text-[#64748B] text-right uppercase tracking-widest">
                           {formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}

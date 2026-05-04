@@ -10,9 +10,12 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { campaign_id, lead } = body
+    const { campaign_id, leads, lead } = body
 
-    if (!campaign_id || !lead) {
+    // Support either an array of leads or a single lead for backward compatibility
+    const leadsToInsert = leads || (lead ? [lead] : [])
+
+    if (!campaign_id || leadsToInsert.length === 0) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -30,34 +33,36 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
     }
 
-    // Insert the lead
-    const { error: leadError } = await supabase
+    // Format leads for bulk insert
+    const formattedLeads = leadsToInsert.map((l: any) => ({
+      campaign_id,
+      ...l,
+      status: l.status || 'new',
+    }))
+
+    // Insert all leads
+    const { error: leadsError, data: insertedLeads } = await supabase
       .from('leads')
-      .insert({
-        campaign_id,
-        ...lead, // Includes place_id, business_name, category, email, etc.
-        status: lead.status || 'new',
-      })
+      .insert(formattedLeads)
+      .select('id')
 
-    if (leadError) {
-      console.error('Error inserting lead:', leadError)
-      return NextResponse.json({ error: 'Failed to insert lead' }, { status: 500 })
+    if (leadsError) {
+      console.error('Error inserting leads:', leadsError)
+      return NextResponse.json({ error: 'Failed to insert leads' }, { status: 500 })
     }
 
-    // Increment leads_found on campaign
-    const newLeadsFound = (campaign.leads_found || 0) + 1
-    const updateData: any = { leads_found: newLeadsFound }
-    
-    if (newLeadsFound >= campaign.lead_count) {
-      updateData.status = 'completed'
-    }
+    const insertedLeadsCount = insertedLeads?.length || leadsToInsert.length
 
+    // Update campaign status to completed and set leads_found count
     await supabase
       .from('campaigns')
-      .update(updateData)
+      .update({ 
+        status: 'completed', 
+        leads_found: insertedLeadsCount 
+      })
       .eq('id', campaign_id)
 
-    // Increment credits_used on user
+    // Increment credits_used on user by the number of inserted leads
     const { data: user } = await supabase
       .from('users')
       .select('credits_used')
@@ -67,11 +72,11 @@ export async function POST(req: Request) {
     if (user) {
       await supabase
         .from('users')
-        .update({ credits_used: (user.credits_used || 0) + 1 })
+        .update({ credits_used: (user.credits_used || 0) + insertedLeadsCount })
         .eq('id', campaign.user_id)
     }
 
-    return NextResponse.json({ success: true }, { status: 200 })
+    return NextResponse.json({ success: true, inserted: insertedLeadsCount }, { status: 200 })
   } catch (error) {
     console.error('Webhook processing error:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
