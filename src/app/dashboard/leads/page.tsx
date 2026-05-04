@@ -20,7 +20,7 @@ import {
   Eye
 } from 'lucide-react'
 import { StatusSelect } from '@/components/ui/StatusSelect'
-
+import { VerdictBadge } from '@/components/ui/VerdictBadge'
 export default function LeadsPage() {
   const [leads, setLeads] = useState<any[]>([])
   const [campaigns, setCampaigns] = useState<any[]>([])
