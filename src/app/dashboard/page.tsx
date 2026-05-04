@@ -68,9 +68,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-black text-[#0F172A] tracking-tight text-left">Dashboard Overview</h2>
-          <p className="text-[#64748B] text-sm font-bold uppercase tracking-widest mt-1 opacity-60 text-left">Here&apos;s your scouting performance at a glance.</p>
+          <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight text-left">Dashboard Overview</h2>
+          <p className="text-[#94A3B8] text-xs font-semibold uppercase tracking-widest mt-1 text-left">Here&apos;s your scouting performance at a glance.</p>
         </div>
         <Link
           href="/dashboard/scout"
@@ -95,7 +94,7 @@ export default function DashboardPage() {
             >
               <div className="flex flex-col gap-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">{stat.label}</p>
-                <span className="text-3xl font-bold text-[#0F172A]">
+                <span className="text-2xl font-bold text-[#0F172A]">
                   <CountUp end={stat.value} duration={1} separator="," />
                 </span>
                 <p className="text-[11px] text-[#64748B] font-medium mt-1">{stat.trend}</p>
@@ -192,11 +191,11 @@ export default function DashboardPage() {
                 <table className="w-full text-left whitespace-nowrap">
                   <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
                     <tr>
-                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Business Name</th>
-                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Category</th>
-                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">City</th>
-                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Verdict</th>
-                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Status</th>
+                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Business Name</th>
+                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Category</th>
+                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">City</th>
+                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Verdict</th>
+                      <th className="px-4 py-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Status</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F1F5F9]">
@@ -206,15 +205,15 @@ export default function DashboardPage() {
                         onClick={() => router.push(`/dashboard/leads/${lead.id}`)}
                         className="hover:bg-[#F8FAFC] transition-colors cursor-pointer"
                       >
-                        <td className="px-6 py-4">
-                          <span className="text-sm font-semibold text-[#0F172A]">{lead.business_name}</span>
+                        <td className="px-4 py-3">
+                          <span className="text-sm font-semibold text-[#0F172A] truncate max-w-[200px] block">{lead.business_name}</span>
                         </td>
-                        <td className="px-6 py-4 text-sm text-[#64748B]">{lead.category}</td>
-                        <td className="px-6 py-4 text-sm text-[#64748B]">{lead.city}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-3 text-sm text-[#64748B] truncate max-w-[120px]">{lead.category}</td>
+                        <td className="px-4 py-3 text-sm text-[#64748B]">{lead.city}</td>
+                        <td className="px-4 py-3">
                           {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-300">—</span>}
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-3">
                           <StatusBadge status={lead.status} />
                         </td>
                       </tr>

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { createBrowserClient } from '@/lib/supabase'
 import { 
   Target, 
   Search, 
@@ -77,7 +76,6 @@ export default function ScoutRunPage() {
 
     setCurrentPhase(1) // "Finding businesses..." complete immediately
     const startTime = Date.now()
-    const supabase = createBrowserClient()
 
     const interval = setInterval(async () => {
       try {
@@ -86,21 +84,14 @@ export default function ScoutRunPage() {
           setShowFallbackButton(true)
         }
 
-        // Query leads directly from Supabase
-        const { data: leads } = await supabase
-          .from('leads')
-          .select('id, draft_body')
-          .eq('campaign_id', activeCampaignId)
-          
-        const currentLeads = leads || []
+        const res = await fetch(`/api/campaigns/${activeCampaignId}`)
+        if (!res.ok) throw new Error('Failed to fetch campaign status')
+        const data = await res.json()
+        
+        const currentLeads = data.leads || []
         setLeadsFound(currentLeads.length)
         
-        // Query campaign to check status
-        const { data: campaign } = await supabase
-          .from('campaigns')
-          .select('status, lead_count')
-          .eq('id', activeCampaignId)
-          .single()
+        const campaign = data.campaign
           
         // "Drafting personalized emails..." active once leads exist and some have draft_body populated
         const hasDrafts = currentLeads.some(l => l.draft_body)

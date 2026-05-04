@@ -24,67 +24,11 @@ import {
   MapPin,
   Star,
   FileText,
-  Users
+  Users,
+  Zap
 } from 'lucide-react'
 
-// Custom Status Dropdown Component
-function StatusDropdown({ status, onUpdate }: { status: string, onUpdate: (s: string) => void }) {
-  const [isOpen, setIsOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
-  const options = ['New', 'Contacted', 'Replied', 'Qualified', 'Won', 'Lost']
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button 
-        onClick={(e) => {
-          e.stopPropagation()
-          setIsOpen(!isOpen)
-        }}
-        className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-100 transition-colors focus:outline-none"
-      >
-        <StatusBadge status={status} />
-        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.95 }}
-            className="absolute left-0 mt-2 w-40 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-20 overflow-hidden p-1"
-          >
-            {options.map((opt) => (
-              <button
-                key={opt}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onUpdate(opt)
-                  setIsOpen(false)
-                }}
-                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
-                  status === opt ? 'bg-[#EFF6FF] text-[#3B82F6]' : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
-                }`}
-              >
-                {opt}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
+import { StatusSelect } from '@/components/ui/StatusSelect'
 
 // Slide-over Panel Component
 function LeadDetailPanel({ lead, isOpen, onClose, onUpdateStatus, onUpdateNotes }: any) {
@@ -393,7 +337,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             <Link href="/dashboard/campaigns" className="p-2.5 bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] rounded-xl transition-all shadow-sm active:scale-95">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <h2 className="text-3xl font-black text-[#0F172A] tracking-tight">{campaign.name}</h2>
+            <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight">{campaign.name}</h2>
           </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-[#64748B] ml-14 font-bold uppercase tracking-widest">
             <span className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-lg"><Target className="w-4 h-4 text-[#3B82F6]" /> {campaign.target_industry}</span>
@@ -413,7 +357,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Total Leads', value: leads.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Emails Found', value: leads.filter(l => !!l.email).length, icon: Mail, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Credits Used', value: leads.length, icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
           { label: 'Drafts Ready', value: leads.filter(l => !!l.draft_body).length, icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
           { label: 'Qualified', value: leads.filter(l => l.status === 'Qualified').length, icon: CheckCircle2, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map((stat, i) => (
@@ -451,17 +395,16 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left whitespace-nowrap">
-              <thead className="bg-[#F8FAFC]/50 text-[10px] uppercase tracking-widest text-[#94A3B8] font-black border-b border-[#E2E8F0]">
+          <div className="overflow-hidden">
+            <table className="w-full text-left whitespace-nowrap table-fixed">
+              <thead className="bg-[#F8FAFC]/50 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] border-b border-[#E2E8F0]">
                 <tr>
-                  <th className="px-8 py-5">Business Name</th>
-                  <th className="px-8 py-5">Industry</th>
-                  <th className="px-8 py-5">Location</th>
-                  <th className="px-8 py-5">Email Status</th>
-                  <th className="px-8 py-5">Website Audit</th>
-                  <th className="px-8 py-5">Lead Status</th>
-                  <th className="px-8 py-5"></th>
+                  <th className="px-4 py-3 w-[25%]">Business Name</th>
+                  <th className="px-4 py-3 w-[20%]">Campaign</th>
+                  <th className="px-4 py-3 w-[15%]">Industry</th>
+                  <th className="px-4 py-3 w-[15%]">Verdict</th>
+                  <th className="px-4 py-3 w-[15%]">Status</th>
+                  <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E2E8F0]">
@@ -471,31 +414,31 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                     onClick={() => setSelectedLead(lead)} 
                     className="hover:bg-[#F8FAFC] transition-all duration-200 group cursor-pointer"
                   >
-                    <td className="px-8 py-6">
-                      <span className="text-sm font-extrabold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors truncate max-w-[200px] block">
+                    <td className="px-4 py-3">
+                      <span className="text-sm font-semibold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors truncate max-w-[200px] block">
                         {lead.business_name}
                       </span>
                     </td>
-                    <td className="px-8 py-6 text-xs font-bold text-[#64748B] uppercase tracking-wider">{lead.category}</td>
-                    <td className="px-8 py-6 text-xs font-bold text-[#64748B] uppercase tracking-wider">{lead.city}</td>
-                    <td className="px-8 py-6">
-                      {lead.email ? (
-                        <div className="flex items-center gap-2">
-                           <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                           <span className="text-sm font-bold text-[#0F172A]">{lead.email}</span>
-                        </div>
-                      ) : (
-                        <span className="text-xs font-bold text-slate-300 italic uppercase tracking-widest">Not Found</span>
-                      )}
+                    <td className="px-4 py-3">
+                      <span className="text-[10px] font-semibold text-[#3B82F6] bg-blue-50 px-2 py-1 rounded border border-blue-100 uppercase tracking-widest inline-block truncate max-w-[180px]">
+                        {campaign.name}
+                      </span>
                     </td>
-                    <td className="px-8 py-6">
+                    <td className="px-4 py-3 text-sm text-[#64748B] truncate max-w-[120px]">{lead.category}</td>
+                    <td className="px-4 py-3">
                       {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-200">—</span>}
                     </td>
-                    <td className="px-8 py-6">
-                      <StatusDropdown status={lead.status || 'New'} onUpdate={(s) => handleStatusChange(lead.id, s)} />
+                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                      <StatusSelect leadId={lead.id} currentStatus={lead.status || 'new'} onStatusChange={(id, newStatus) => handleStatusChange(id, newStatus)} />
                     </td>
-                    <td className="px-8 py-6 text-right">
-                       <div className="p-2 text-slate-300 group-hover:text-[#3B82F6] group-hover:bg-blue-50 rounded-xl transition-all inline-block"><Eye className="w-5 h-5" /></div>
+                    <td className="px-4 py-3 text-right">
+                       <Link 
+                         href={`/dashboard/leads/${lead.id}`}
+                         className="p-1.5 text-slate-300 group-hover:text-[#3B82F6] group-hover:bg-blue-50 rounded transition-all inline-block"
+                         onClick={e => e.stopPropagation()}
+                       >
+                         <Eye className="w-4 h-4" />
+                       </Link>
                     </td>
                   </tr>
                 ))}

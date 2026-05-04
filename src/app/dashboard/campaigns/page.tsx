@@ -74,8 +74,8 @@ export default function CampaignsPage() {
     <div className="pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-3xl font-black text-[#0F172A] tracking-tight mb-1">Your Campaigns</h2>
-          <p className="text-[#64748B] text-sm font-bold uppercase tracking-widest opacity-60">Manage your scout runs and view their progress.</p>
+          <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight mb-1">Your Campaigns</h2>
+          <p className="text-[#94A3B8] text-xs font-semibold uppercase tracking-widest">Manage your scout runs and view their progress.</p>
         </div>
         <Link
           href="/dashboard/scout"
@@ -119,16 +119,16 @@ export default function CampaignsPage() {
           </div>
 
           <div className="bg-white rounded-[32px] border border-[#E2E8F0] shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left whitespace-nowrap">
+            <div className="overflow-hidden">
+              <table className="w-full text-left whitespace-nowrap table-fixed">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-8 py-5 text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">Campaign Name</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">Target</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">Progress</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">Status</th>
-                    <th className="px-8 py-5 text-[10px] font-black text-[#94A3B8] uppercase tracking-widest text-right">Created</th>
-                    <th className="px-4 py-5"></th>
+                    <th className="px-4 py-3 text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider w-[35%]">Campaign Name</th>
+                    <th className="px-4 py-3 text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider w-[20%]">Target</th>
+                    <th className="px-4 py-3 text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider w-[15%]">Progress</th>
+                    <th className="px-4 py-3 text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider w-[12%]">Status</th>
+                    <th className="px-4 py-3 text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider text-right w-[13%]">Created</th>
+                    <th className="px-4 py-3 w-[5%]"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E2E8F0]">
@@ -142,24 +142,24 @@ export default function CampaignsPage() {
                     
                     return (
                       <tr key={campaign.id} className="hover:bg-[#F8FAFC] transition-colors group">
-                        <td className="px-8 py-6">
+                        <td className="px-4 py-3">
                           <Link href={`/dashboard/campaigns/${campaign.id}`} className="block">
-                            <span className="text-sm font-extrabold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors">
+                            <span className="text-sm font-semibold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors max-w-[280px] truncate block">
                               {campaign.name}
                             </span>
                           </Link>
                         </td>
-                        <td className="px-8 py-6">
-                          <div className="flex items-center gap-2">
-                            <span className="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg bg-slate-100 text-slate-600">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2 max-w-[150px] truncate">
+                            <span className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider rounded bg-slate-100 text-slate-600 truncate">
                               {campaign.target_industry}
                             </span>
-                            <span className="text-[#64748B] text-xs font-bold">{campaign.location}</span>
+                            <span className="text-[#64748B] text-sm truncate">{campaign.location}</span>
                           </div>
                         </td>
-                        <td className="px-8 py-6">
-                          <div className="w-full max-w-[150px]">
-                            <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1.5">
+                        <td className="px-4 py-3">
+                          <div className="w-full">
+                            <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider mb-1.5">
                               <span className="text-[#0F172A]">{found} <span className="text-[#94A3B8]">/ {maxLeads}</span></span>
                               <span className="text-[#64748B]">{percent}%</span>
                             </div>
@@ -171,13 +171,13 @@ export default function CampaignsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-8 py-6">
+                        <td className="px-4 py-3">
                           <StatusBadge status={displayStatus} />
                         </td>
-                        <td className="px-8 py-6 text-xs font-bold text-[#64748B] text-right uppercase tracking-widest">
+                        <td className="px-4 py-3 text-sm text-[#64748B] text-right">
                           {formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}
                         </td>
-                        <td className="px-4 py-6 text-right relative">
+                        <td className="px-4 py-3 text-right relative">
                           <button
                             onClick={(e) => {
                               e.stopPropagation()
