@@ -1,72 +1,161 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import { Search, Download, Filter, Users, ChevronLeft, ChevronRight, CheckSquare } from 'lucide-react'
-import { downloadCSV } from '@/lib/csv-export'
+import { 
+  Search, 
+  Download, 
+  Filter, 
+  Users, 
+  ChevronLeft, 
+  ChevronRight, 
+  CheckSquare,
+  ChevronDown,
+  X,
+  Target,
+  ArrowUpRight,
+  MoreVertical,
+  Eye
+} from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { VerdictBadge } from '@/components/ui/VerdictBadge'
 import { TableRowSkeleton } from '@/components/ui/SkeletonLoader'
 import { EmptyState } from '@/components/ui/EmptyState'
 
+// Custom Status Dropdown Component (Shared/Inline)
+function StatusDropdown({ status, onUpdate }: { status: string, onUpdate: (s: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const options = ['New', 'Contacted', 'Replied', 'Qualified', 'Won', 'Lost']
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button 
+        onClick={(e) => {
+          e.stopPropagation()
+          setIsOpen(!isOpen)
+        }}
+        className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 transition-all focus:outline-none"
+      >
+        <StatusBadge status={status} />
+        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            className="absolute left-0 mt-2 w-36 bg-white border border-[#E2E8F0] rounded-xl shadow-xl z-20 overflow-hidden p-1"
+          >
+            {options.map((opt) => (
+              <button
+                key={opt}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onUpdate(opt)
+                  setIsOpen(false)
+                }}
+                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
+                  status === opt ? 'bg-[#EFF6FF] text-[#3B82F6]' : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
+                }`}
+              >
+                {opt}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
 export default function LeadsPage() {
   const [leads, setLeads] = useState<any[]>([])
   const [campaigns, setCampaigns] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
   
-  const [statusFilter, setStatusFilter] = useState('')
-  const [verdictFilter, setVerdictFilter] = useState('')
-  const [campaignFilter, setCampaignFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [verdictFilter, setVerdictFilter] = useState('All')
+  const [campaignFilter, setCampaignFilter] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
   
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set())
 
-  const itemsPerPage = 25
+  const limit = 25
 
-  useEffect(() => {
-    const fetchLeads = async () => {
-      setLoading(true)
-      try {
-        const params = new URLSearchParams()
-        if (statusFilter) params.append('status', statusFilter)
-        if (verdictFilter) params.append('verdict', verdictFilter)
-        if (campaignFilter) params.append('campaign_id', campaignFilter)
-        if (searchQuery) params.append('search', searchQuery)
+  const fetchLeads = async (page: number) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (statusFilter !== 'All') params.append('status', statusFilter)
+      if (verdictFilter !== 'All') params.append('verdict', verdictFilter)
+      if (campaignFilter !== 'All') params.append('campaign_id', campaignFilter)
+      if (searchQuery) params.append('search', searchQuery)
+      params.append('page', page.toString())
+      params.append('limit', limit.toString())
 
-        const res = await fetch(`/api/leads?${params.toString()}`)
-        if (res.ok) {
-          const data = await res.json()
-          setLeads(data.leads || [])
-          setCampaigns(data.campaigns || [])
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
+      const res = await fetch(`/api/leads?${params.toString()}`)
+      if (res.ok) {
+        const data = await res.json()
+        setLeads(data.leads || [])
+        setCampaigns(data.campaigns || [])
+        setTotalCount(data.totalCount || 0)
       }
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to load leads')
+    } finally {
+      setLoading(false)
     }
+  }
 
+  // Effect for search debounce
+  useEffect(() => {
     const timeoutId = setTimeout(() => {
-      fetchLeads()
-      setCurrentPage(1) // Reset to page 1 on filter
-      setSelectedLeadIds(new Set()) // Clear selection on filter
+      setCurrentPage(1)
+      fetchLeads(1)
     }, 300)
     return () => clearTimeout(timeoutId)
-  }, [statusFilter, verdictFilter, campaignFilter, searchQuery])
+  }, [searchQuery, statusFilter, verdictFilter, campaignFilter])
+
+  // Effect for pagination
+  useEffect(() => {
+    if (currentPage !== 1) {
+      fetchLeads(currentPage)
+    }
+  }, [currentPage])
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
+    // Optimistic
+    const oldLeads = [...leads]
+    setLeads(leads.map(l => l.id === leadId ? { ...l, status: newStatus } : l))
+
     try {
-      await fetch(`/api/leads/${leadId}`, {
+      const res = await fetch(`/api/leads/${leadId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       })
-      setLeads(leads.map(l => l.id === leadId ? { ...l, status: newStatus } : l))
-      toast.success('Status updated')
+      if (!res.ok) throw new Error()
+      toast.success(`✓ Lead status updated to ${newStatus}`)
     } catch (err) {
+      setLeads(oldLeads)
       toast.error('Failed to update status')
     }
   }
@@ -77,7 +166,6 @@ export default function LeadsPage() {
     const toastId = toast.loading(`Updating ${ids.length} leads...`)
     
     try {
-      // Basic Promise.all since we don't have a bulk patch endpoint
       await Promise.all(ids.map(id => 
         fetch(`/api/leads/${id}`, {
           method: 'PATCH',
@@ -87,7 +175,7 @@ export default function LeadsPage() {
       ))
       
       setLeads(leads.map(l => selectedLeadIds.has(l.id) ? { ...l, status: newStatus } : l))
-      toast.success(`Successfully updated ${ids.length} leads to ${newStatus}`, { id: toastId })
+      toast.success(`✓ Successfully updated ${ids.length} leads to ${newStatus}`, { id: toastId })
       setSelectedLeadIds(new Set())
     } catch (error) {
       toast.error('Failed to update some leads', { id: toastId })
@@ -100,15 +188,41 @@ export default function LeadsPage() {
       : leads
 
     if (dataToExport.length === 0) return toast.error('No leads to export')
-    downloadCSV(dataToExport, 'leadengine_export')
-    toast.success('Export completed')
+    
+    const csvRows = [
+      ['Business Name', 'Category', 'City', 'Email', 'Phone', 'Website', 'Verdict', 'Status', 'Draft Subject', 'Draft Body'],
+      ...dataToExport.map(lead => [
+        lead.business_name,
+        lead.category,
+        lead.city,
+        lead.email || '',
+        lead.phone || '',
+        lead.website || '',
+        lead.audit_verdict || '',
+        lead.status,
+        lead.draft_subject || '',
+        lead.draft_body || '',
+      ])
+    ]
+
+    const csvContent = csvRows.map(row => row.map(cell => `"${(String(cell || '')).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `leads_export_${new Date().toISOString().split('T')[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    toast.success(`📥 CSV downloaded — ${dataToExport.length} leads`)
   }
 
   const toggleSelectAll = () => {
-    if (selectedLeadIds.size === paginatedLeads.length) {
+    if (selectedLeadIds.size === leads.length) {
       setSelectedLeadIds(new Set())
     } else {
-      setSelectedLeadIds(new Set(paginatedLeads.map(l => l.id)))
+      setSelectedLeadIds(new Set(leads.map(l => l.id)))
     }
   }
 
@@ -121,220 +235,279 @@ export default function LeadsPage() {
 
   const campaignMap = useMemo(() => new Map(campaigns.map(c => [c.id, c.name])), [campaigns])
   const statusOptions = ['New', 'Contacted', 'Replied', 'Qualified', 'Won', 'Lost']
+  const verdictOptions = ['NO_SITE', 'OUTDATED', 'DATED', 'BROKEN', 'ACCEPTABLE', 'MODERN']
 
-  // Pagination logic
-  const totalPages = Math.ceil((leads?.length || 0) / itemsPerPage)
-  const paginatedLeads = leads?.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage) || []
+  const totalPages = Math.ceil(totalCount / limit)
 
   return (
-    <div className="pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div className="pb-12 space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight mb-1">All Leads</h2>
-          <p className="text-[#64748B] text-sm">Master view of all leads across your campaigns.</p>
+          <h2 className="text-3xl font-black text-[#0F172A] tracking-tight">Master Leads Database</h2>
+          <p className="text-[#64748B] font-bold text-xs uppercase tracking-widest mt-1">Manage and filter leads across all your campaigns</p>
         </div>
         <button 
           onClick={handleExportCSV}
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] text-sm font-bold rounded-xl transition-all shadow-sm h-fit"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#0F172A] text-white text-sm font-bold rounded-xl transition-all shadow-lg hover:bg-slate-800 active:scale-[0.98]"
         >
           <Download className="w-4 h-4" /> 
-          {selectedLeadIds.size > 0 ? `Export Selected (${selectedLeadIds.size})` : 'Export All'}
+          {selectedLeadIds.size > 0 ? `Export Selected (${selectedLeadIds.size})` : 'Export All Results'}
         </button>
       </div>
 
-      {/* Filters Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-[#E2E8F0] shadow-sm mb-6 flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
-          <input 
-            type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search business name..." 
-            className="w-full pl-9 pr-4 py-2 text-sm border border-[#E2E8F0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-shadow"
-          />
-        </div>
-        
-        <div className="flex flex-wrap gap-3">
-          <select 
-            value={campaignFilter}
-            onChange={(e) => setCampaignFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E2E8F0] rounded-xl text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#3B82F6] bg-white cursor-pointer shadow-sm"
-          >
-            <option value="">All Campaigns</option>
-            {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <select 
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E2E8F0] rounded-xl text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#3B82F6] bg-white cursor-pointer shadow-sm"
-          >
-            <option value="">All Statuses</option>
-            {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
-          <select 
-            value={verdictFilter}
-            onChange={(e) => setVerdictFilter(e.target.value)}
-            className="px-3 py-2 text-sm border border-[#E2E8F0] rounded-xl text-[#0F172A] font-medium focus:outline-none focus:ring-2 focus:ring-[#3B82F6] bg-white cursor-pointer shadow-sm"
-          >
-            <option value="">All Verdicts</option>
-            <option value="OUTDATED">Outdated</option>
-            <option value="DATED">Dated</option>
-            <option value="NO_SITE">No Site</option>
-            <option value="BROKEN">Broken</option>
-          </select>
+      {/* Modern Filter Bar */}
+      <div className="bg-white p-5 rounded-3xl border border-[#E2E8F0] shadow-sm space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+            <input 
+              type="text" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by business name..." 
+              className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-sm font-bold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-all"
+            />
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+            <div className="flex flex-col gap-1">
+               <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Campaign</label>
+               <select 
+                 value={campaignFilter}
+                 onChange={(e) => setCampaignFilter(e.target.value)}
+                 className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-extrabold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] cursor-pointer shadow-sm min-w-[160px]"
+               >
+                 <option value="All">All Campaigns</option>
+                 {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+               </select>
+            </div>
+            <div className="flex flex-col gap-1">
+               <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Status</label>
+               <select 
+                 value={statusFilter}
+                 onChange={(e) => setStatusFilter(e.target.value)}
+                 className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-extrabold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] cursor-pointer shadow-sm min-w-[140px]"
+               >
+                 <option value="All">All Statuses</option>
+                 {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+               </select>
+            </div>
+            <div className="flex flex-col gap-1">
+               <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Verdict</label>
+               <select 
+                 value={verdictFilter}
+                 onChange={(e) => setVerdictFilter(e.target.value)}
+                 className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-extrabold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] cursor-pointer shadow-sm min-w-[140px]"
+               >
+                 <option value="All">All Verdicts</option>
+                 {verdictOptions.map(opt => <option key={opt} value={opt}>{opt.replace('_', ' ')}</option>)}
+               </select>
+            </div>
+            <button 
+              onClick={() => { setStatusFilter('All'); setVerdictFilter('All'); setCampaignFilter('All'); setSearchQuery('') }}
+              className="self-end p-3 bg-slate-50 border border-slate-100 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shadow-sm"
+              title="Clear all filters"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Bulk Actions Bar */}
+      {/* Bulk Actions Contextual Bar */}
       <AnimatePresence>
         {selectedLeadIds.size > 0 && (
           <motion.div 
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: 'auto' }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            className="bg-[#F0F9FF] border border-[#BAE6FD] rounded-xl p-3 mb-6 flex items-center justify-between shadow-sm overflow-hidden"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#0F172A] text-white px-6 py-4 rounded-3xl shadow-2xl z-50 flex items-center gap-8 border border-slate-700 backdrop-blur-md"
           >
-            <div className="flex items-center gap-2 text-[#0369A1] text-sm font-bold pl-2">
-              <CheckSquare className="w-4 h-4" />
-              {selectedLeadIds.size} Leads Selected
-            </div>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-[#0284C7] font-semibold uppercase tracking-wider">Bulk Update Status:</span>
-              <select 
-                onChange={(e) => {
-                  if (e.target.value) handleBulkStatusUpdate(e.target.value)
-                  e.target.value = "" // Reset
-                }}
-                className="px-3 py-1.5 text-sm border border-[#BAE6FD] rounded-lg text-[#0369A1] font-bold focus:outline-none focus:ring-2 focus:ring-[#3B82F6] bg-white cursor-pointer shadow-sm"
-              >
-                <option value="">Select...</option>
-                {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-              </select>
+              <div className="w-8 h-8 bg-[#3B82F6] rounded-full flex items-center justify-center font-black text-xs text-white shadow-lg shadow-blue-500/20">
+                {selectedLeadIds.size}
+              </div>
+              <span className="text-sm font-bold uppercase tracking-widest">Leads Selected</span>
             </div>
+            
+            <div className="h-6 w-px bg-slate-700" />
+            
+            <div className="flex items-center gap-4">
+               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bulk Update:</span>
+               <div className="flex gap-2">
+                 {['Qualified', 'Won', 'Lost'].map(status => (
+                   <button
+                     key={status}
+                     onClick={() => handleBulkStatusUpdate(status)}
+                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl transition-all border border-slate-600 active:scale-95"
+                   >
+                     {status}
+                   </button>
+                 ))}
+               </div>
+            </div>
+            
+            <button 
+              onClick={() => setSelectedLeadIds(new Set())}
+              className="p-2 text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {loading ? (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
-          {[1, 2, 3, 4, 5, 6].map(i => <TableRowSkeleton key={i} />)}
-        </div>
-      ) : (!leads || leads.length === 0) ? (
-        <EmptyState
-          icon={<Users className="w-8 h-8" />}
-          title="No leads found"
-          description="You don't have any leads matching these filters yet. Try adjusting your search criteria."
-          action={
-            <button onClick={() => { setStatusFilter(''); setVerdictFilter(''); setCampaignFilter(''); setSearchQuery('') }} className="px-5 py-2.5 bg-white border border-[#E2E8F0] text-[#0F172A] text-sm font-bold rounded-xl shadow-sm hover:bg-[#F8FAFC] mt-2">
-              Clear Filters
-            </button>
-          }
-        />
-      ) : (
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+      {/* Main Table */}
+      <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-8 space-y-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="h-14 w-full bg-slate-50 animate-pulse rounded-2xl" />)}
+          </div>
+        ) : (!leads || leads.length === 0) ? (
+          <div className="p-20 flex flex-col items-center text-center">
+             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300 ring-8 ring-slate-50/50">
+               <Users className="w-10 h-10" />
+             </div>
+             <p className="text-[#0F172A] text-xl font-black mb-2 tracking-tight">No leads found.</p>
+             <p className="text-[#64748B] text-sm max-w-sm font-bold leading-relaxed mb-8">We couldn't find any leads matching your current filter settings. Try clearing them to see more.</p>
+             <button 
+               onClick={() => { setStatusFilter('All'); setVerdictFilter('All'); setCampaignFilter('All'); setSearchQuery('') }}
+               className="px-8 py-3 bg-[#3B82F6] text-white font-bold rounded-xl shadow-lg hover:bg-[#2563EB] transition-all active:scale-95"
+             >
+               Clear All Filters
+             </button>
+          </div>
+        ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left whitespace-nowrap">
-              <thead>
-                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                  <th className="px-5 py-4 w-12 text-center">
-                    <input 
-                      type="checkbox" 
-                      checked={paginatedLeads.length > 0 && selectedLeadIds.size === paginatedLeads.length}
-                      onChange={toggleSelectAll}
-                      className="w-4 h-4 text-[#3B82F6] rounded border-[#CBD5E1] focus:ring-[#3B82F6] cursor-pointer"
-                    />
+              <thead className="bg-[#F8FAFC]/50 text-[10px] uppercase tracking-widest text-[#94A3B8] font-black border-b border-[#E2E8F0]">
+                <tr>
+                  <th className="px-6 py-5 w-12">
+                    <div className="flex items-center justify-center">
+                      <input 
+                        type="checkbox" 
+                        checked={leads.length > 0 && selectedLeadIds.size === leads.length}
+                        onChange={toggleSelectAll}
+                        className="w-5 h-5 text-[#3B82F6] rounded-lg border-[#E2E8F0] focus:ring-[#3B82F6] cursor-pointer transition-all shadow-sm"
+                      />
+                    </div>
                   </th>
-                  <th className="px-4 py-4 text-xs font-bold text-[#64748B] uppercase tracking-wider">Business Name</th>
-                  <th className="px-4 py-4 text-xs font-bold text-[#64748B] uppercase tracking-wider">Campaign</th>
-                  <th className="px-4 py-4 text-xs font-bold text-[#64748B] uppercase tracking-wider">Category</th>
-                  <th className="px-4 py-4 text-xs font-bold text-[#64748B] uppercase tracking-wider">City</th>
-                  <th className="px-4 py-4 text-xs font-bold text-[#64748B] uppercase tracking-wider">Verdict</th>
-                  <th className="px-4 py-4 text-xs font-bold text-[#64748B] uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-5">Business Name</th>
+                  <th className="px-6 py-5">Campaign</th>
+                  <th className="px-6 py-5">Industry</th>
+                  <th className="px-6 py-5">Verdict</th>
+                  <th className="px-6 py-5">Status</th>
+                  <th className="px-6 py-5"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E2E8F0]">
-                {paginatedLeads.map((lead) => (
+                {leads.map((lead) => (
                   <tr 
                     key={lead.id} 
-                    className={`transition-colors group cursor-pointer ${selectedLeadIds.has(lead.id) ? 'bg-[#F0F9FF]' : 'hover:bg-[#F8FAFC]'}`}
-                    onClick={(e) => {
-                      if ((e.target as HTMLElement).tagName !== 'SELECT' && (e.target as HTMLElement).tagName !== 'INPUT') {
-                        toggleSelectLead(lead.id)
-                      }
-                    }}
+                    className={`transition-all duration-200 group cursor-pointer ${selectedLeadIds.has(lead.id) ? 'bg-[#F0F9FF]' : 'hover:bg-[#F8FAFC]'}`}
+                    onClick={() => toggleSelectLead(lead.id)}
                   >
-                    <td className="px-5 py-4 text-center">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedLeadIds.has(lead.id)}
-                        onChange={() => toggleSelectLead(lead.id)}
-                        onClick={e => e.stopPropagation()}
-                        className="w-4 h-4 text-[#3B82F6] rounded border-[#CBD5E1] focus:ring-[#3B82F6] cursor-pointer"
-                      />
+                    <td className="px-6 py-6" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-center">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedLeadIds.has(lead.id)}
+                          onChange={() => toggleSelectLead(lead.id)}
+                          className="w-5 h-5 text-[#3B82F6] rounded-lg border-[#E2E8F0] focus:ring-[#3B82F6] cursor-pointer transition-all shadow-sm"
+                        />
+                      </div>
                     </td>
-                    <td className="px-4 py-4">
-                      <Link href={`/dashboard/leads/${lead.id}`} className="block">
-                        <span className="text-sm font-bold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors truncate max-w-[180px] block">
+                    <td className="px-6 py-6">
+                      <Link href={`/dashboard/leads/${lead.id}`} className="block" onClick={e => e.stopPropagation()}>
+                        <span className="text-sm font-extrabold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors truncate max-w-[200px] block">
                           {lead.business_name}
                         </span>
                       </Link>
                     </td>
-                    <td className="px-4 py-4 text-xs font-semibold text-[#3B82F6] truncate max-w-[150px]">
-                      <Link href={`/dashboard/campaigns/${lead.campaign_id}`} className="hover:underline" onClick={(e) => e.stopPropagation()}>
-                        {campaignMap.get(lead.campaign_id) || 'Unknown Campaign'}
+                    <td className="px-6 py-6">
+                      <Link 
+                        href={`/dashboard/campaigns/${lead.campaign_id}`} 
+                        className="text-[10px] font-black text-[#3B82F6] bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest inline-block" 
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {campaignMap.get(lead.campaign_id) || 'Unknown'}
                       </Link>
                     </td>
-                    <td className="px-4 py-4 text-sm font-medium text-[#64748B]">{lead.category}</td>
-                    <td className="px-4 py-4 text-sm font-medium text-[#64748B]">{lead.city}</td>
-                    <td className="px-4 py-4">
-                      {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-[#94A3B8]">—</span>}
+                    <td className="px-6 py-6 text-xs font-bold text-[#64748B] uppercase tracking-wider">{lead.category}</td>
+                    <td className="px-6 py-6">
+                      {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-200">—</span>}
                     </td>
-                    <td className="px-4 py-4">
-                      <select 
-                        value={lead.status || 'New'}
-                        onChange={(e) => handleStatusChange(lead.id, e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-xs font-bold border border-[#E2E8F0] rounded-lg px-2.5 py-1.5 bg-white text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] shadow-sm cursor-pointer"
-                      >
-                        {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
+                    <td className="px-6 py-6" onClick={e => e.stopPropagation()}>
+                       <StatusDropdown status={lead.status || 'New'} onUpdate={(s) => handleStatusChange(lead.id, s)} />
+                    </td>
+                    <td className="px-6 py-6 text-right">
+                       <Link 
+                         href={`/dashboard/leads/${lead.id}`}
+                         className="p-2 text-slate-300 group-hover:text-[#3B82F6] group-hover:bg-blue-50 rounded-xl transition-all inline-block"
+                         onClick={e => e.stopPropagation()}
+                       >
+                         <ArrowUpRight className="w-5 h-5" />
+                       </Link>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
-              <span className="text-sm text-[#64748B] font-medium">
-                Showing <span className="font-bold text-[#0F172A]">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-[#0F172A]">{Math.min(currentPage * itemsPerPage, leads.length)}</span> of <span className="font-bold text-[#0F172A]">{leads.length}</span> results
-              </span>
-              <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="p-1.5 rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <div className="px-3 py-1.5 rounded-lg bg-white border border-[#E2E8F0] text-sm font-bold text-[#0F172A] shadow-sm">
-                  {currentPage} <span className="text-[#94A3B8] font-medium">/ {totalPages}</span>
-                </div>
-                <button 
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </div>
+        )}
+
+        {/* Pagination Section */}
+        {totalPages > 1 && (
+          <div className="px-8 py-6 border-t border-[#E2E8F0] bg-[#F8FAFC]/50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+               <p className="text-xs font-bold text-[#64748B] uppercase tracking-widest">
+                 Page <span className="text-[#0F172A]">{currentPage}</span> of {totalPages}
+               </p>
+               <span className="text-[#E2E8F0] mx-2">|</span>
+               <p className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest">
+                 Showing {leads.length} of {totalCount} total leads
+               </p>
             </div>
-          )}
-        </div>
-      )}
+            
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2.5 rounded-xl border border-[#E2E8F0] bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              
+              <div className="flex gap-1.5">
+                 {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-10 h-10 rounded-xl text-xs font-black transition-all border shadow-sm ${
+                          currentPage === pageNum 
+                          ? 'bg-[#0F172A] text-white border-[#0F172A]' 
+                          : 'bg-white text-[#64748B] border-[#E2E8F0] hover:border-[#3B82F6]'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                 })}
+              </div>
+
+              <button 
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2.5 rounded-xl border border-[#E2E8F0] bg-white text-[#64748B] hover:text-[#0F172A] hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-sm active:scale-90"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

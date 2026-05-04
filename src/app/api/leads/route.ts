@@ -14,6 +14,11 @@ export async function GET(req: Request) {
     const verdictFilter = searchParams.get('verdict')
     const searchFilter = searchParams.get('search')
     const campaignFilter = searchParams.get('campaign_id')
+    
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '25')
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
     const supabase = createServerClient()
 
@@ -28,44 +33,51 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // 2. Get user's campaigns
-    let campaignQuery = supabase.from('campaigns').select('id, name').eq('user_id', user.id)
-    if (campaignFilter) {
-      campaignQuery = campaignQuery.eq('id', campaignFilter)
-    }
-    const { data: campaigns } = await campaignQuery
+    // 2. Get user's campaigns (for filtering and for the dropdown)
+    const { data: allUserCampaigns } = await supabase
+      .from('campaigns')
+      .select('id, name')
+      .eq('user_id', user.id)
 
-    if (!campaigns || campaigns.length === 0) {
-      return NextResponse.json({ leads: [], campaigns: [] })
+    if (!allUserCampaigns || allUserCampaigns.length === 0) {
+      return NextResponse.json({ leads: [], campaigns: [], totalCount: 0 })
     }
 
-    const campaignIds = campaigns.map(c => c.id)
+    const campaignIds = allUserCampaigns.map(c => c.id)
 
     // 3. Build Leads Query
     let query = supabase
       .from('leads')
-      .select('*')
+      .select('*', { count: 'exact' })
       .in('campaign_id', campaignIds)
       .order('created_at', { ascending: false })
 
-    if (statusFilter) {
+    if (statusFilter && statusFilter !== 'All') {
       query = query.eq('status', statusFilter)
     }
-    if (verdictFilter) {
+    if (verdictFilter && verdictFilter !== 'All') {
       query = query.eq('audit_verdict', verdictFilter)
+    }
+    if (campaignFilter && campaignFilter !== 'All') {
+      query = query.eq('campaign_id', campaignFilter)
     }
     if (searchFilter) {
       query = query.ilike('business_name', `%${searchFilter}%`)
     }
 
-    const { data: leads, error: leadsError } = await query
+    // Apply pagination
+    const { data: leads, error: leadsError, count } = await query.range(from, to)
 
     if (leadsError) {
       console.error('Error fetching leads:', leadsError)
       return NextResponse.json({ error: 'Failed to fetch leads' }, { status: 500 })
     }
 
-    return NextResponse.json({ leads, campaigns })
+    return NextResponse.json({ 
+      leads, 
+      campaigns: allUserCampaigns, 
+      totalCount: count || 0 
+    })
   } catch (error) {
     console.error('API error:', error)
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })

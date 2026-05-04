@@ -1,69 +1,167 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { UserButton } from '@clerk/nextjs'
+import { UserButton, useUser } from '@clerk/nextjs'
 import { Toaster } from 'sonner'
-import { BarChart3, Target, Folder, Users, Settings, Menu, X } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  BarChart3, 
+  Target, 
+  FolderOpen, 
+  Users, 
+  Settings, 
+  ChevronLeft, 
+  Menu, 
+  X,
+  ChevronRight
+} from 'lucide-react'
 
 const sidebarLinks = [
   { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
   { name: 'Scout', href: '/dashboard/scout', icon: Target },
-  { name: 'Campaigns', href: '/dashboard/campaigns', icon: Folder },
+  { name: 'Campaigns', href: '/dashboard/campaigns', icon: FolderOpen },
   { name: 'Leads', href: '/dashboard/leads', icon: Users },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const { user } = useUser()
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Persist collapse state
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed')
+    if (saved !== null) {
+      setIsCollapsed(saved === 'true')
+    }
+    setIsLoaded(true)
+  }, [])
+
+  const toggleCollapse = () => {
+    const newState = !isCollapsed
+    setIsCollapsed(newState)
+    localStorage.setItem('sidebar-collapsed', String(newState))
+  }
+
+  if (!isLoaded) return null // Prevent hydration mismatch
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] flex font-sans overflow-x-hidden">
       <Toaster position="top-right" richColors />
       
-      {/* Mobile Header */}
-      <div className="md:hidden flex items-center justify-between bg-white px-4 py-3 border-b border-[#E2E8F0] z-20">
-        <Link href="/dashboard" className="flex items-center">
-          <span className="text-lg font-bold text-[#0F172A] tracking-tight">
-            Lead<span className="text-[#3B82F6]">Engine</span>
-          </span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <UserButton afterSignOutUrl="/" />
-          <button
-            onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-            className="p-1 text-[#64748B] focus:outline-none"
-          >
-            {mobileSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 z-50">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center text-white font-bold text-lg">L</div>
+          <span className="text-lg font-bold text-[#0F172A]">Lead<span className="text-[#3B82F6]">Engine</span></span>
         </div>
+        <button 
+          onClick={() => setIsMobileOpen(true)}
+          className="p-2 text-[#64748B] hover:bg-[#F8FAFC] rounded-lg transition-colors"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
       </div>
 
-      {/* Sidebar overlay for mobile */}
-      {mobileSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 z-30 md:hidden"
-          onClick={() => setMobileSidebarOpen(false)}
-        />
-      )}
+      {/* Mobile Drawer Overlay */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileOpen(false)}
+            className="lg:hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60]"
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Sidebar */}
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {isMobileOpen && (
+          <motion.aside
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="lg:hidden fixed top-0 left-0 bottom-0 w-[280px] bg-white z-[70] flex flex-col border-r border-[#E2E8F0]"
+          >
+            <div className="p-6 flex items-center justify-between border-b border-[#E2E8F0]">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center text-white font-bold text-lg">L</div>
+                <span className="text-xl font-bold text-[#0F172A]">Lead<span className="text-[#3B82F6]">Engine</span></span>
+              </div>
+              <button onClick={() => setIsMobileOpen(false)} className="p-2 text-[#64748B] hover:bg-[#F8FAFC] rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+              {sidebarLinks.map((item) => {
+                const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+                const Icon = item.icon
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    onClick={() => setIsMobileOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                      isActive ? 'bg-[#EFF6FF] text-[#3B82F6] border-l-4 border-[#3B82F6]' : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {item.name}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            <div className="p-4 border-t border-[#E2E8F0] space-y-4">
+              <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl p-4 shadow-sm">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">Starter Plan</p>
+                <p className="text-xs text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
+                <Link href="/dashboard/settings" onClick={() => setIsMobileOpen(false)} className="w-full block py-2 text-center text-xs font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:bg-[#F8FAFC] transition-colors shadow-sm">
+                  Upgrade Plan
+                </Link>
+              </div>
+              <div className="flex items-center gap-3 px-2">
+                <UserButton afterSignOutUrl="/" />
+                <span className="text-sm font-bold text-[#0F172A]">{user?.fullName || 'My Account'}</span>
+              </div>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Desktop Sidebar */}
       <aside
-        className={`fixed md:sticky top-0 left-0 z-40 w-64 h-screen bg-white border-r border-[#E2E8F0] transform transition-transform duration-300 ease-in-out flex flex-col ${
-          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        className={`hidden lg:flex flex-col fixed top-0 left-0 bottom-0 bg-white border-r border-[#E2E8F0] transition-all duration-300 ease-in-out z-40 ${
+          isCollapsed ? 'w-16' : 'w-64'
         }`}
       >
-        <div className="p-6 hidden md:block">
-          <Link href="/dashboard" className="flex items-center">
-            <span className="text-2xl font-bold text-[#0F172A] tracking-tight">
-              Lead<span className="text-[#3B82F6]">Engine</span>
-            </span>
+        {/* Logo Section */}
+        <div className={`p-4 h-16 flex items-center border-b border-[#E2E8F0] ${isCollapsed ? 'justify-center' : 'px-6'}`}>
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">L</div>
+            {!isCollapsed && (
+              <motion.span 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }}
+                className="text-xl font-bold text-[#0F172A] tracking-tight whitespace-nowrap"
+              >
+                Lead<span className="text-[#3B82F6]">Engine</span>
+              </motion.span>
+            )}
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 py-4 md:py-0 space-y-1.5 overflow-y-auto mt-16 md:mt-0">
+        {/* Navigation Links */}
+        <nav className="flex-1 py-6 px-2 space-y-1 overflow-y-auto">
           {sidebarLinks.map((item) => {
             const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
             const Icon = item.icon
@@ -71,55 +169,90 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Link
                 key={item.name}
                 href={item.href}
-                onClick={() => setMobileSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all relative ${
-                  isActive
-                    ? 'bg-[#F0F9FF] text-[#2563EB]'
-                    : 'text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]'
-                }`}
+                title={isCollapsed ? item.name : ''}
+                className={`flex items-center rounded-xl transition-all relative group h-11 ${
+                  isActive ? 'bg-[#EFF6FF] text-[#3B82F6]' : 'text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A]'
+                } ${isCollapsed ? 'justify-center mx-1' : 'px-4 mx-2'}`}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#3B82F6] rounded-r-full" />
+                  <motion.div 
+                    layoutId="sidebar-accent"
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#3B82F6] rounded-r-full" 
+                  />
                 )}
-                <Icon className={`w-5 h-5 ${isActive ? 'text-[#3B82F6]' : 'text-[#94A3B8]'}`} />
-                {item.name}
+                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-[#3B82F6]' : 'text-[#94A3B8] group-hover:text-[#0F172A]'}`} />
+                {!isCollapsed && (
+                  <span className="ml-3 text-sm font-bold whitespace-nowrap">{item.name}</span>
+                )}
+                
+                {/* Custom Tooltip for Collapsed State */}
+                {isCollapsed && (
+                  <div className="absolute left-14 px-2.5 py-1.5 bg-[#0F172A] text-white text-[10px] font-bold rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50 shadow-xl border border-slate-700 uppercase tracking-widest">
+                    {item.name}
+                  </div>
+                )}
               </Link>
             )
           })}
         </nav>
-        
-        {/* Upgrade Badge Placeholder & User Info */}
-        <div className="p-4 border-t border-[#E2E8F0] mt-auto">
-          <div className="bg-gradient-to-r from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-xl p-4 mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#64748B]">Starter Plan</span>
-            </div>
-            <p className="text-xs text-[#64748B] mb-3">Upgrade to unlock more leads and premium features.</p>
-            <Link href="/dashboard/settings" className="w-full block text-center py-2 text-xs font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-lg shadow-sm hover:border-[#3B82F6] transition-colors">
-              Upgrade Plan
-            </Link>
-          </div>
-          <div className="flex items-center gap-3 px-2">
+
+        {/* Bottom Section */}
+        <div className="p-2 border-t border-[#E2E8F0]">
+          {!isCollapsed && (
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }}
+              className="mb-4 p-4 bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl shadow-sm"
+            >
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">Starter Plan</p>
+              <p className="text-[11px] text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
+              <Link href="/dashboard/settings" className="w-full block py-2 text-center text-[11px] font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:border-[#3B82F6] transition-all shadow-sm active:scale-95">
+                Upgrade Plan
+              </Link>
+            </motion.div>
+          )}
+
+          {/* User Info */}
+          <div className={`flex items-center p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors ${isCollapsed ? 'justify-center' : 'gap-3 px-3'}`}>
             <UserButton afterSignOutUrl="/" />
-            <span className="text-sm font-semibold text-[#0F172A]">My Account</span>
+            {!isCollapsed && (
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-bold text-[#0F172A] truncate">{user?.fullName || 'Account'}</span>
+                <span className="text-[10px] text-[#64748B] font-medium truncate uppercase tracking-tighter">{user?.primaryEmailAddress?.emailAddress}</span>
+              </div>
+            )}
           </div>
+
+          {/* Collapse Toggle Button */}
+          <button
+            onClick={toggleCollapse}
+            className={`w-full mt-2 flex items-center p-2.5 text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC] rounded-xl transition-all ${isCollapsed ? 'justify-center' : 'px-4'}`}
+          >
+            {isCollapsed ? <ChevronRight className="w-5 h-5" /> : (
+              <div className="flex items-center gap-3">
+                <ChevronLeft className="w-5 h-5 shrink-0" />
+                <span className="text-sm font-bold">Hide Menu</span>
+              </div>
+            )}
+          </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Desktop Topbar */}
-        <header className="hidden md:flex items-center justify-between px-8 py-4 bg-white border-b border-[#E2E8F0] sticky top-0 z-10">
-          <h1 className="text-xl font-bold text-[#0F172A]">
-            {sidebarLinks.find((l) => l.href === pathname || (l.href !== '/dashboard' && pathname.startsWith(l.href)))?.name || 'Dashboard'}
-          </h1>
-        </header>
-
-        {/* Content */}
-        <main className="flex-1 p-4 md:p-8 w-full max-w-6xl mx-auto">
+      <main 
+        className={`flex-1 transition-all duration-300 min-h-screen pt-16 lg:pt-0 ${
+          isCollapsed ? 'lg:ml-16' : 'lg:ml-64'
+        }`}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="p-6 md:p-8 max-w-7xl mx-auto"
+        >
           {children}
-        </main>
-      </div>
+        </motion.div>
+      </main>
     </div>
   )
 }
