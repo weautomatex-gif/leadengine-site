@@ -68,6 +68,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
           <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight text-left">Dashboard Overview</h2>
           <p className="text-[#94A3B8] text-xs font-semibold uppercase tracking-widest mt-1 text-left">Here&apos;s your scouting performance at a glance.</p>
         </div>
