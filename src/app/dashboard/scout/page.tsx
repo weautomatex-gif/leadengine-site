@@ -94,7 +94,7 @@ export default function ScoutRunPage() {
         const campaign = data.campaign
           
         // "Drafting personalized emails..." active once leads exist and some have draft_body populated
-        const hasDrafts = currentLeads.some(l => l.draft_body)
+        const hasDrafts = currentLeads.some((l: any) => l.draft_body)
         if (hasDrafts) {
           setCurrentPhase(prev => Math.max(prev, 2))
         }
@@ -133,7 +133,7 @@ export default function ScoutRunPage() {
       return
     }
 
-    const duplicate = existingCampaigns.find(c => 
+    const duplicate = existingCampaigns.find((c: any) => 
       c.status === 'running' && 
       c.target_industry?.toLowerCase() === currentIndustry.toLowerCase() && 
       c.location?.toLowerCase() === currentLocation.toLowerCase()
