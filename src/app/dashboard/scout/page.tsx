@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import { createBrowserClient } from '@/lib/supabase'
 import { 
   Target, 
   Search, 
@@ -43,6 +44,7 @@ export default function ScoutRunPage() {
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null)
   const [leadsFound, setLeadsFound] = useState(0)
   const [currentPhase, setCurrentPhase] = useState(0)
+  const [showFallbackButton, setShowFallbackButton] = useState(false)
   
   const [creditsLeft, setCreditsLeft] = useState<number | null>(null)
   const [fetchingCredits, setFetchingCredits] = useState(true)
@@ -68,40 +70,67 @@ export default function ScoutRunPage() {
   }, [industry, customIndustry, location])
 
   useEffect(() => {
-    if (status !== 'running') return
-    if (leadsFound > 0 && currentPhase === 0) setCurrentPhase(1)
-    if (leadsFound > 5 && currentPhase === 1) setCurrentPhase(2)
-  }, [leadsFound, status, currentPhase])
+    if (status !== 'running' || !activeCampaignId) {
+      setShowFallbackButton(false)
+      return
+    }
 
-  useEffect(() => {
-    if (status !== 'running' || !activeCampaignId) return
+    setCurrentPhase(1) // "Finding businesses..." complete immediately
+    const startTime = Date.now()
+    const supabase = createBrowserClient()
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/campaigns/${activeCampaignId}`)
-        if (res.ok) {
-          const data = await res.json()
-          setLeadsFound(data.campaign.leads_found || 0)
+        const timeElapsed = Date.now() - startTime
+        if (timeElapsed > 30000) {
+          setShowFallbackButton(true)
+        }
+
+        // Query leads directly from Supabase
+        const { data: leads } = await supabase
+          .from('leads')
+          .select('id, draft_body')
+          .eq('campaign_id', activeCampaignId)
           
-          if (data.campaign.status === 'completed') {
-            setTimeout(() => {
-              clearInterval(interval)
-              toast.success('✓ Campaign ready!')
-              router.push(`/dashboard/campaigns/${activeCampaignId}`)
-            }, 1000)
-          } else if (data.campaign.status === 'failed') {
-            clearInterval(interval)
-            toast.error('Scout run failed.')
-            setStatus('idle')
-          }
+        const currentLeads = leads || []
+        setLeadsFound(currentLeads.length)
+        
+        // Query campaign to check status
+        const { data: campaign } = await supabase
+          .from('campaigns')
+          .select('status, lead_count')
+          .eq('id', activeCampaignId)
+          .single()
+          
+        // "Drafting personalized emails..." active once leads exist and some have draft_body populated
+        const hasDrafts = currentLeads.some(l => l.draft_body)
+        if (hasDrafts) {
+          setCurrentPhase(prev => Math.max(prev, 2))
+        }
+
+        const maxLeads = campaign?.lead_count || leadCount
+        const isTimeout = timeElapsed > 3 * 60 * 1000 // 3 minutes timeout
+        const isComplete = campaign?.status === 'completed' || currentLeads.length >= maxLeads || isTimeout
+
+        if (isComplete) {
+          clearInterval(interval)
+          setCurrentPhase(3) // All phases complete
+          setTimeout(() => {
+            toast.success('✓ Campaign ready!')
+            router.push(`/dashboard/campaigns/${activeCampaignId}`)
+          }, 2000)
+        } else if (campaign?.status === 'failed') {
+          clearInterval(interval)
+          toast.error('Scout run failed.')
+          setStatus('idle')
         }
       } catch (err) {
         console.error('Polling error:', err)
       }
-    }, 4000)
+    }, 5000)
 
     return () => clearInterval(interval)
-  }, [status, activeCampaignId, router])
+  }, [status, activeCampaignId, router, leadCount])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -313,6 +342,18 @@ export default function ScoutRunPage() {
                   )
                })}
             </div>
+
+            {/* Fallback Button */}
+            {showFallbackButton && (
+              <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="w-full text-center pb-2">
+                <button 
+                  onClick={() => router.push(`/dashboard/campaigns/${activeCampaignId}`)}
+                  className="text-xs font-bold text-[#3B82F6] hover:text-[#2563EB] transition-colors bg-blue-50/50 px-4 py-2 rounded-full border border-blue-100"
+                >
+                  Taking longer than expected? View your campaign &rarr;
+                </button>
+              </motion.div>
+            )}
 
             {/* Subtle Credits Footer */}
             {!fetchingCredits && creditsLeft !== null && (

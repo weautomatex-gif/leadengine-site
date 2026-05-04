@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     // Get the campaign to find the user
     const { data: campaign, error: campaignError } = await supabase
       .from('campaigns')
-      .select('user_id, leads_found')
+      .select('user_id, leads_found, lead_count')
       .eq('id', campaign_id)
       .single()
 
@@ -45,9 +45,16 @@ export async function POST(req: Request) {
     }
 
     // Increment leads_found on campaign
+    const newLeadsFound = (campaign.leads_found || 0) + 1
+    const updateData: any = { leads_found: newLeadsFound }
+    
+    if (newLeadsFound >= campaign.lead_count) {
+      updateData.status = 'completed'
+    }
+
     await supabase
       .from('campaigns')
-      .update({ leads_found: (campaign.leads_found || 0) + 1 })
+      .update(updateData)
       .eq('id', campaign_id)
 
     // Increment credits_used on user
