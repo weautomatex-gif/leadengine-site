@@ -56,10 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       
       {/* Mobile Top Bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center text-white font-bold text-lg">L</div>
-          <span className="text-lg font-bold text-[#0F172A]">Lead<span className="text-[#3B82F6]">Engine</span></span>
-        </div>
+        <Link href="/" className="flex items-center gap-2">
+          <span className="text-lg font-black text-[#0F172A] tracking-tight">Lead<span className="text-[#3B82F6]">Engine</span></span>
+        </Link>
         <button 
           onClick={() => setIsMobileOpen(true)}
           className="p-2 text-[#64748B] hover:bg-[#F8FAFC] rounded-lg transition-colors"
@@ -92,10 +91,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             className="lg:hidden fixed top-0 left-0 bottom-0 w-[280px] bg-white z-[70] flex flex-col border-r border-[#E2E8F0]"
           >
             <div className="p-6 flex items-center justify-between border-b border-[#E2E8F0]">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center text-white font-bold text-lg">L</div>
-                <span className="text-xl font-bold text-[#0F172A]">Lead<span className="text-[#3B82F6]">Engine</span></span>
-              </div>
+              <Link href="/" className="flex items-center gap-2">
+                <span className="text-xl font-black text-[#0F172A] tracking-tight">Lead<span className="text-[#3B82F6]">Engine</span></span>
+              </Link>
               <button onClick={() => setIsMobileOpen(false)} className="p-2 text-[#64748B] hover:bg-[#F8FAFC] rounded-lg transition-colors">
                 <X className="w-5 h-5" />
               </button>
@@ -146,13 +144,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         {/* Logo Section */}
         <div className={`p-4 h-16 flex items-center border-b border-[#E2E8F0] ${isCollapsed ? 'justify-center' : 'px-6'}`}>
-          <Link href="/dashboard" className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">L</div>
-            {!isCollapsed && (
+          <Link href="/" className="flex items-center gap-3">
+            {isCollapsed ? (
+              <span className="text-lg font-black text-[#0F172A] tracking-tighter">LE</span>
+            ) : (
               <motion.span 
                 initial={{ opacity: 0 }} 
                 animate={{ opacity: 1 }}
-                className="text-xl font-bold text-[#0F172A] tracking-tight whitespace-nowrap"
+                className="text-xl font-black text-[#0F172A] tracking-tight whitespace-nowrap"
               >
                 Lead<span className="text-[#3B82F6]">Engine</span>
               </motion.span>
