@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import CountUp from 'react-countup'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow, format } from 'date-fns'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { 
   Users, 
   Mail, 
@@ -25,7 +26,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [data, setData] = useState<{ stats: any; recentCampaigns: any[]; recentLeads: any[] } | null>(null)
+  const [data, setData] = useState<{ stats: any; recentCampaigns: any[]; recentLeads: any[]; chartData?: any[]; topNiche?: string; totalScouts?: number } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -90,173 +91,180 @@ export default function DashboardPage() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: i * 0.08 }}
-              className={`bg-white rounded-3xl border border-[#E2E8F0] p-6 shadow-sm hover:shadow-md transition-all duration-300 border-l-[4px] group ${stat.border}`}
+              className={`bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm hover:shadow-md transition-all duration-200 border-l-[3px] group ${stat.border} relative`}
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-2xl ${stat.bg} group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="w-6 h-6" style={{ color: stat.color }} />
-                </div>
-                <div className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full uppercase tracking-widest">
-                  <TrendingUp className="w-3 h-3" /> Growth
-                </div>
+              <div className="flex flex-col gap-2">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">{stat.label}</p>
+                <span className="text-3xl font-bold text-[#0F172A]">
+                  <CountUp end={stat.value} duration={1} separator="," />
+                </span>
+                <p className="text-[11px] text-[#64748B] font-medium mt-1">{stat.trend}</p>
               </div>
-              <div>
-                <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest mb-1 text-left">{stat.label}</p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-[#0F172A] tracking-tighter">
-                    <CountUp end={stat.value} duration={0.6} separator="," />
-                  </span>
-                </div>
-                <p className="text-[11px] text-[#64748B] mt-2 font-bold flex items-center gap-1">
-                  <ArrowUpRight className="w-3 h-3 text-[#10B981]" /> {stat.trend}
-                </p>
+              <div className={`absolute top-6 right-6 w-10 h-10 rounded-xl flex items-center justify-center ${stat.bg}`}>
+                <Icon className="w-5 h-5" style={{ color: stat.color }} />
               </div>
             </motion.div>
           )
         })}
       </div>
 
-      {/* Recent Leads Section */}
-      <div className="bg-white rounded-[32px] border border-[#E2E8F0] shadow-sm overflow-hidden">
-        <div className="px-8 py-6 border-b border-[#E2E8F0] flex items-center justify-between bg-white">
-          <h3 className="text-xl font-black text-[#0F172A] tracking-tight">Recent Leads</h3>
-          <Link href="/dashboard/leads" className="text-[10px] font-black text-[#3B82F6] hover:text-[#2563EB] uppercase tracking-widest flex items-center gap-1 group">
-            View All Leads
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
+      {/* Performance Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-6"
+      >
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-[#0F172A]">Lead Activity</h3>
+          <p className="text-sm text-[#64748B]">Leads captured this month</p>
+        </div>
+        
+        <div className="h-[200px] w-full">
+          {(!data?.chartData || data.chartData.length === 0 || data.chartData.every(d => d.leads === 0)) ? (
+            <div className="h-full flex items-center justify-center text-sm font-medium text-[#94A3B8] bg-[#F8FAFC] rounded-xl border border-dashed border-[#E2E8F0]">
+              No leads this month — start a scout to see activity here
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={data.chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis 
+                  dataKey="date" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#94A3B8' }}
+                  dy={10}
+                />
+                <YAxis 
+                  axisLine={false} 
+                  tickLine={false} 
+                  tick={{ fontSize: 10, fill: '#94A3B8' }}
+                />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  labelStyle={{ color: '#64748B', fontSize: '12px', fontWeight: 'bold' }}
+                  itemStyle={{ color: '#0F172A', fontSize: '14px', fontWeight: 'bold' }}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="leads" 
+                  stroke="#3B82F6" 
+                  strokeWidth={2}
+                  fillOpacity={1} 
+                  fill="url(#colorLeads)" 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Recent Leads Section */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden flex flex-col">
+          <div className="px-6 py-5 border-b border-[#E2E8F0] flex items-center justify-between bg-white">
+            <h3 className="text-lg font-semibold text-[#0F172A]">Recent Leads</h3>
+            <Link href="/dashboard/leads" className="text-xs font-semibold text-[#3B82F6] hover:text-[#2563EB] flex items-center gap-1 group">
+              View All Leads <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="flex-1">
+            {(!data?.recentLeads || data.recentLeads.length === 0) ? (
+              <div className="p-12 flex flex-col items-center justify-center h-full text-center">
+                <Users className="w-10 h-10 text-slate-300 mb-4" />
+                <h4 className="text-[#0F172A] font-semibold mb-1">No leads yet</h4>
+                <p className="text-sm text-[#64748B] mb-4">You haven't captured any leads.</p>
+                <Link href="/dashboard/scout" className="text-sm font-semibold text-[#3B82F6] hover:text-[#2563EB] flex items-center gap-1">
+                  Start Scouting <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left whitespace-nowrap">
+                  <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                    <tr>
+                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Business Name</th>
+                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Category</th>
+                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">City</th>
+                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Verdict</th>
+                      <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F1F5F9]">
+                    {data.recentLeads.map((lead: any) => (
+                      <tr 
+                        key={lead.id}
+                        onClick={() => router.push(`/dashboard/leads/${lead.id}`)}
+                        className="hover:bg-[#F8FAFC] transition-colors cursor-pointer"
+                      >
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-semibold text-[#0F172A]">{lead.business_name}</span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-[#64748B]">{lead.category}</td>
+                        <td className="px-6 py-4 text-sm text-[#64748B]">{lead.city}</td>
+                        <td className="px-6 py-4">
+                          {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-300">—</span>}
+                        </td>
+                        <td className="px-6 py-4">
+                          <StatusBadge status={lead.status} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
 
-        {(!data?.recentLeads || data.recentLeads.length === 0) ? (
-          <div className="p-16">
-            <EmptyState
-              icon={<Users className="w-10 h-10" />}
-              title="No leads discovered yet"
-              description="Start your first scout run to find high-quality leads in your target industry."
-              action={
-                <Link href="/dashboard/scout" className="px-8 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-black rounded-2xl transition-all shadow-lg mt-4">
-                  Find Your First Leads →
-                </Link>
-              }
-            />
+        {/* Monthly Summary Section */}
+        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col p-6">
+          <h3 className="text-lg font-semibold text-[#0F172A] mb-6">
+            {format(new Date(), 'MMMM yyyy')}
+          </h3>
+          
+          <div className="space-y-4 flex-1">
+            <div className="flex justify-between items-center py-2 border-b border-slate-50">
+              <span className="text-sm text-[#64748B]">Scouts run</span>
+              <span className="text-sm font-semibold text-[#0F172A]">{data?.totalScouts || 0}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-slate-50">
+              <span className="text-sm text-[#64748B]">Leads captured</span>
+              <span className="text-sm font-semibold text-[#0F172A]">{data?.stats?.totalLeads || 0}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-slate-50">
+              <span className="text-sm text-[#64748B]">Emails found</span>
+              <span className="text-sm font-semibold text-[#0F172A]">{data?.stats?.emailsFound || 0}</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-slate-50">
+              <span className="text-sm text-[#64748B]">Response rate</span>
+              <span className="text-sm font-semibold text-[#0F172A]">
+                {data?.stats?.totalLeads > 0 
+                  ? `${Math.round(((data?.stats?.emailsFound || 0) / data.stats.totalLeads) * 100)}%` 
+                  : '—'}
+              </span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span className="text-sm text-[#64748B]">Top niche</span>
+              <span className="text-sm font-semibold text-[#0F172A]">{data?.topNiche || '—'}</span>
+            </div>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left whitespace-nowrap">
-              <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] uppercase tracking-widest text-[#94A3B8] font-black">
-                <tr>
-                  <th className="px-8 py-5">Business Name</th>
-                  <th className="px-8 py-5">Campaign</th>
-                  <th className="px-8 py-5">Category</th>
-                  <th className="px-8 py-5">City</th>
-                  <th className="px-8 py-5">Verdict</th>
-                  <th className="px-8 py-5">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
-                {data.recentLeads.map((lead: any) => (
-                  <tr 
-                    key={lead.id}
-                    onClick={() => router.push(`/dashboard/leads/${lead.id}`)}
-                    className="hover:bg-[#F8FAFC] transition-all duration-200 group cursor-pointer"
-                  >
-                    <td className="px-8 py-6">
-                      <span className="text-sm font-extrabold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors">
-                        {lead.business_name}
-                      </span>
-                    </td>
-                    <td className="px-8 py-6">
-                       <span className="text-[10px] font-black text-[#3B82F6] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100 uppercase tracking-widest">
-                          {lead.campaign_name}
-                       </span>
-                    </td>
-                    <td className="px-8 py-6 text-xs font-bold text-[#64748B] uppercase tracking-wider">{lead.category}</td>
-                    <td className="px-8 py-6 text-xs font-bold text-[#64748B] uppercase tracking-wider">{lead.city}</td>
-                    <td className="px-8 py-6">
-                      {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-200">—</span>}
-                    </td>
-                    <td className="px-8 py-6">
-                      <StatusBadge status={lead.status} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          
+          <div className="pt-6 mt-2">
+            <Link href="/dashboard/campaigns" className="text-sm font-semibold text-[#3B82F6] hover:text-[#2563EB] flex items-center justify-center gap-1 group w-full bg-[#F8FAFC] py-2.5 rounded-xl border border-[#E2E8F0] transition-colors hover:border-[#3B82F6]">
+              View Campaigns <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
-        )}
-      </div>
-
-      {/* Recent Campaigns Section */}
-      <div className="bg-white rounded-[32px] border border-[#E2E8F0] shadow-sm overflow-hidden">
-        <div className="px-8 py-6 border-b border-[#E2E8F0] flex items-center justify-between bg-white">
-          <h3 className="text-xl font-black text-[#0F172A] tracking-tight">Recent Campaigns</h3>
-          <Link href="/dashboard/campaigns" className="text-[10px] font-black text-[#3B82F6] hover:text-[#2563EB] uppercase tracking-widest flex items-center gap-1 group">
-            View All Campaigns
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
         </div>
-
-        {(!data?.recentCampaigns || data.recentCampaigns.length === 0) ? (
-          <div className="p-12">
-            <EmptyState
-              icon={<FolderOpen className="w-10 h-10" />}
-              title="No campaigns yet"
-              description="Create a campaign to start organizing your leads and tracking your progress."
-              action={
-                <Link href="/dashboard/scout" className="px-8 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-black rounded-2xl transition-all shadow-lg mt-4">
-                  New Campaign
-                </Link>
-              }
-            />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left whitespace-nowrap">
-              <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[10px] uppercase tracking-widest text-[#94A3B8] font-black">
-                <tr>
-                  <th className="px-8 py-5">Campaign Name</th>
-                  <th className="px-8 py-5">Target Audience</th>
-                  <th className="px-8 py-5 text-center">Leads Found</th>
-                  <th className="px-8 py-5">Status</th>
-                  <th className="px-8 py-5 text-right">Run Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
-                {data.recentCampaigns.map((campaign: any) => (
-                  <tr 
-                    key={campaign.id}
-                    onClick={() => router.push(`/dashboard/campaigns/${campaign.id}`)}
-                    className="hover:bg-[#F8FAFC] transition-all duration-200 group cursor-pointer"
-                  >
-                    <td className="px-8 py-6">
-                      <span className="text-sm font-extrabold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors">
-                        {campaign.name}
-                      </span>
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2.5 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg bg-slate-100 text-slate-600">
-                          {campaign.target_industry}
-                        </span>
-                        <span className="text-[#64748B] text-xs font-bold">{campaign.location}</span>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6 text-center">
-                      <span className="text-sm font-black text-[#0F172A] bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
-                        {campaign.leads_found}
-                      </span>
-                    </td>
-                    <td className="px-8 py-6">
-                      <StatusBadge status={campaign.status} />
-                    </td>
-                    <td className="px-8 py-6 text-right text-[10px] font-black text-[#64748B] uppercase tracking-widest">
-                      {formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
     </div>
   )

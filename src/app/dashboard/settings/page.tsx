@@ -2,6 +2,7 @@ import { currentUser, auth } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase'
 import { SettingsForm } from '@/components/dashboard/SettingsForm'
+import { ProfileActions, BillingActions } from '@/components/dashboard/SettingsActionButtons'
 
 export default async function SettingsPage() {
   const { userId: clerkId } = await auth()
@@ -76,11 +77,7 @@ export default async function SettingsPage() {
                 </div>
               </div>
             </div>
-            <div className="mt-6">
-              <p className="text-xs font-medium text-[#64748B]">
-                Your profile information is securely managed through Clerk. To update your name or email, use the account menu in the top right.
-              </p>
-            </div>
+            <ProfileActions />
           </div>
         </section>
 
@@ -115,14 +112,7 @@ export default async function SettingsPage() {
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3 pt-6 border-t border-[#E2E8F0]">
-              <button className="px-5 py-2.5 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-bold rounded-xl transition-colors shadow-sm">
-                Upgrade Plan
-              </button>
-              <button className="px-5 py-2.5 bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] text-sm font-bold rounded-xl transition-colors shadow-sm">
-                Manage Billing
-              </button>
-            </div>
+            <BillingActions />
           </div>
         </section>
 

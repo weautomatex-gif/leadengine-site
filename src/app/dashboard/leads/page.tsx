@@ -264,8 +264,8 @@ export default function LeadsPage() {
               type="text" 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by business name..." 
-              className="w-full pl-12 pr-4 py-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-2xl text-sm font-bold text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-all"
+              placeholder="Search business name..." 
+              className="w-full h-10 pl-10 pr-4 text-sm border border-[#E2E8F0] rounded-xl bg-white focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-all text-[#0F172A] placeholder-[#94A3B8]"
             />
           </div>
           
@@ -275,7 +275,7 @@ export default function LeadsPage() {
                <select 
                  value={campaignFilter}
                  onChange={(e) => setCampaignFilter(e.target.value)}
-                 className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-extrabold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] cursor-pointer shadow-sm min-w-[160px]"
+                 className="h-10 px-4 text-sm border border-[#E2E8F0] rounded-xl bg-white focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-all text-[#0F172A] min-w-[160px] cursor-pointer appearance-none"
                >
                  <option value="All">All Campaigns</option>
                  {campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -286,7 +286,7 @@ export default function LeadsPage() {
                <select 
                  value={statusFilter}
                  onChange={(e) => setStatusFilter(e.target.value)}
-                 className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-extrabold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] cursor-pointer shadow-sm min-w-[140px]"
+                 className="h-10 px-4 text-sm border border-[#E2E8F0] rounded-xl bg-white focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-all text-[#0F172A] min-w-[140px] cursor-pointer appearance-none"
                >
                  <option value="All">All Statuses</option>
                  {statusOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
@@ -297,7 +297,7 @@ export default function LeadsPage() {
                <select 
                  value={verdictFilter}
                  onChange={(e) => setVerdictFilter(e.target.value)}
-                 className="px-4 py-2.5 bg-white border border-[#E2E8F0] rounded-xl text-xs font-extrabold text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] cursor-pointer shadow-sm min-w-[140px]"
+                 className="h-10 px-4 text-sm border border-[#E2E8F0] rounded-xl bg-white focus:ring-2 focus:ring-[#3B82F6]/20 focus:border-[#3B82F6] transition-all text-[#0F172A] min-w-[140px] cursor-pointer appearance-none"
                >
                  <option value="All">All Verdicts</option>
                  {verdictOptions.map(opt => <option key={opt} value={opt}>{opt.replace('_', ' ')}</option>)}

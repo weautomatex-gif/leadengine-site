@@ -18,7 +18,7 @@ export default function CampaignsPage() {
   const [sortBy, setSortBy] = useState('newest')
   
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
-  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   const fetchCampaigns = () => {
     setLoading(true)
@@ -58,7 +58,7 @@ export default function CampaignsPage() {
     } catch (error) {
       toast.error('Error deleting campaign', { id: toastId })
     } finally {
-      setDeleteId(null)
+      setDeleteTarget(null)
     }
   }
 
@@ -187,25 +187,27 @@ export default function CampaignsPage() {
                           
                           {openMenuId === campaign.id && (
                             <div 
-                              className="absolute right-0 top-12 z-50 w-48 bg-white rounded-2xl shadow-2xl border border-[#E2E8F0] py-2 overflow-hidden"
+                              className="absolute right-0 top-10 z-50 w-48 bg-white rounded-xl shadow-lg border border-[#E2E8F0] py-1 animate-in fade-in slide-in-from-top-1 duration-150"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button 
-                                onClick={() => router.push(`/dashboard/campaigns/${campaign.id}`)}
-                                className="flex items-center gap-2 w-full px-4 py-3 text-sm font-bold text-[#0F172A] hover:bg-[#F8FAFC] transition-colors text-left"
+                                onClick={() => {
+                                  router.push(`/dashboard/campaigns/${campaign.id}`)
+                                  setOpenMenuId(null)
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-[#0F172A] hover:bg-[#F8FAFC] flex items-center gap-2 transition-colors"
                               >
-                                <Eye className="w-4 h-4 text-[#64748B]" />
+                                <Eye className="h-4 w-4 text-[#64748B]" />
                                 View Details
                               </button>
-                              <div className="h-px bg-[#E2E8F0] mx-2" />
                               <button
                                 onClick={() => {
+                                  setDeleteTarget({ id: campaign.id, name: campaign.name })
                                   setOpenMenuId(null)
-                                  setDeleteId(campaign.id)
                                 }}
-                                className="flex items-center gap-2 w-full px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors text-left"
+                                className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="h-4 w-4" />
                                 Delete Campaign
                               </button>
                             </div>
@@ -222,32 +224,34 @@ export default function CampaignsPage() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {deleteId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl border border-[#E2E8F0]"
-          >
-            <h3 className="text-2xl font-black text-[#0F172A] tracking-tight mb-3">Delete Campaign</h3>
-            <p className="text-[#64748B] text-sm font-bold leading-relaxed mb-8">
-              Are you sure you want to delete this campaign? All leads in this campaign will also be deleted. This cannot be undone.
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border border-[#E2E8F0]">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-[#0F172A]">Delete Campaign</h3>
+            </div>
+            <p className="text-sm text-[#64748B] mb-6">
+              Are you sure you want to delete <span className="font-semibold text-[#0F172A]">"{deleteTarget.name}"</span>?
+              All leads in this campaign will also be permanently deleted.
             </p>
             <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setDeleteId(null)} 
-                className="px-6 py-3 text-sm font-black text-[#64748B] bg-slate-50 border border-[#E2E8F0] rounded-2xl hover:bg-slate-100 transition-all active:scale-95"
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2.5 text-sm font-medium text-[#64748B] bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl hover:bg-[#F1F5F9] transition-colors"
               >
                 Cancel
               </button>
-              <button 
-                onClick={() => handleDelete(deleteId)} 
-                className="px-6 py-3 text-sm font-black text-white bg-red-500 rounded-2xl hover:bg-red-600 transition-all shadow-lg shadow-red-200 active:scale-95"
+              <button
+                onClick={() => handleDelete(deleteTarget.id)}
+                className="px-4 py-2.5 text-sm font-medium text-white bg-red-500 rounded-xl hover:bg-red-600 transition-colors shadow-sm"
               >
                 Delete
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       )}
     </div>

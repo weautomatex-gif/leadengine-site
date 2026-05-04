@@ -28,18 +28,59 @@ export async function GET() {
     let emailsFound = 0
     let draftsReady = 0
     let recentLeads: any[] = []
+    let chartData: any[] = []
 
     if (campaignIds.length > 0) {
       // Get all leads for summary stats
       const { data: allLeads } = await supabase
         .from('leads')
-        .select('id, email, draft_body')
+        .select('id, email, draft_body, created_at, category')
         .in('campaign_id', campaignIds)
+
+      let topNiche = ''
 
       if (allLeads) {
         totalLeads = allLeads.length
         emailsFound = allLeads.filter(l => !!l.email).length
         draftsReady = allLeads.filter(l => !!l.draft_body).length
+        
+        // Compute chart data for current month
+        const chartDataMap = new Map<string, number>()
+        const currentMonth = new Date().getMonth()
+        const currentYear = new Date().getFullYear()
+
+        const categoryCounts = new Map<string, number>()
+
+        allLeads.forEach(lead => {
+          const date = new Date(lead.created_at)
+          if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+            const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+            chartDataMap.set(dateString, (chartDataMap.get(dateString) || 0) + 1)
+          }
+
+          if (lead.category) {
+            categoryCounts.set(lead.category, (categoryCounts.get(lead.category) || 0) + 1)
+          }
+        })
+
+        const today = new Date()
+        for (let i = 1; i <= today.getDate(); i++) {
+          const d = new Date(today.getFullYear(), today.getMonth(), i)
+          const dateString = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+          chartData.push({
+            date: dateString,
+            leads: chartDataMap.get(dateString) || 0
+          })
+        }
+
+        // Find top niche
+        let maxCount = 0
+        categoryCounts.forEach((count, cat) => {
+          if (count > maxCount) {
+            maxCount = count
+            topNiche = cat
+          }
+        })
       }
 
       // Get 10 most recent leads with campaign names
@@ -71,7 +112,10 @@ export async function GET() {
     return NextResponse.json({
       stats: { totalLeads, emailsFound, draftsReady, creditsLeft },
       recentCampaigns: campaigns?.slice(0, 5) || [],
-      recentLeads
+      recentLeads,
+      chartData,
+      topNiche: topNiche || '—',
+      totalScouts: campaigns?.length || 0
     })
   } catch (error) {
     console.error('Stats error:', error)
