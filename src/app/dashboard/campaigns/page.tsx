@@ -190,7 +190,7 @@ export default function CampaignsPage() {
                           
                           {openMenuId === campaign.id && (
                             <div 
-                              className="absolute right-0 top-10 z-50 w-48 bg-white rounded-xl shadow-lg border border-[#E2E8F0] py-1 animate-in fade-in slide-in-from-top-1 duration-150"
+                              className="absolute right-0 top-10 z-[100] w-44 bg-white rounded-xl shadow-lg border border-[#E2E8F0] py-1 animate-in fade-in slide-in-from-top-1 duration-150"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button 

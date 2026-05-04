@@ -296,7 +296,7 @@ export default function LeadsPage() {
       </AnimatePresence>
 
       {/* Main Table */}
-      <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-sm">
         {loading ? (
           <div className="p-8 space-y-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="h-14 w-full bg-slate-50 animate-pulse rounded-2xl" />)}
@@ -316,7 +316,7 @@ export default function LeadsPage() {
              </button>
           </div>
         ) : (
-          <div className="overflow-hidden">
+          <div>
             <table className="w-full text-left whitespace-nowrap table-fixed">
               <thead className="bg-[#F8FAFC]/50 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] border-b border-[#E2E8F0]">
                 <tr>
@@ -338,7 +338,7 @@ export default function LeadsPage() {
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
+              <tbody className="divide-y divide-[#E2E8F0] overflow-visible">
                 {leads.map((lead) => (
                   <tr 
                     key={lead.id} 
@@ -376,7 +376,7 @@ export default function LeadsPage() {
                     <td className="px-4 py-3">
                       {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-200">—</span>}
                     </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="px-4 py-3 relative overflow-visible" onClick={e => e.stopPropagation()}>
                        <StatusSelect leadId={lead.id} currentStatus={lead.status || 'new'} onStatusChange={(id, newStatus) => handleStatusChange(id, newStatus)} />
                     </td>
                     <td className="px-4 py-3 text-right">

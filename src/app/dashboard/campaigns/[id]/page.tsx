@@ -376,7 +376,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
       </div>
 
       {/* Leads Table Container */}
-      <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-sm overflow-hidden">
+      <div className="bg-white rounded-3xl border border-[#E2E8F0] shadow-sm">
         <div className="px-8 py-6 border-b border-[#E2E8F0] bg-[#F8FAFC]/50 flex justify-between items-center">
           <h3 className="font-extrabold text-[#0F172A] text-lg">Discovered Business Leads</h3>
           <span className="text-[10px] font-extrabold text-[#64748B] bg-white px-3 py-1.5 rounded-xl border border-[#E2E8F0] shadow-sm uppercase tracking-widest">{leads.length} results</span>
@@ -395,7 +395,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden">
+          <div>
             <table className="w-full text-left whitespace-nowrap table-fixed">
               <thead className="bg-[#F8FAFC]/50 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] border-b border-[#E2E8F0]">
                 <tr>
@@ -407,7 +407,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E2E8F0]">
+              <tbody className="divide-y divide-[#E2E8F0] overflow-visible">
                 {leads.map((lead) => (
                   <tr 
                     key={lead.id} 
@@ -428,7 +428,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
                     <td className="px-4 py-3">
                       {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-200">—</span>}
                     </td>
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                    <td className="px-4 py-3 relative overflow-visible" onClick={e => e.stopPropagation()}>
                       <StatusSelect leadId={lead.id} currentStatus={lead.status || 'new'} onStatusChange={(id, newStatus) => handleStatusChange(id, newStatus)} />
                     </td>
                     <td className="px-4 py-3 text-right">

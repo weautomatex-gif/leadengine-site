@@ -71,7 +71,7 @@ export function StatusSelect({ leadId, currentStatus, onStatusChange }: StatusSe
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 z-50 w-36 bg-white rounded-xl shadow-lg border border-[#E2E8F0] py-1 animate-in fade-in slide-in-from-top-1 duration-150">
+        <div className="absolute right-0 top-full mt-1 z-[100] w-36 bg-white rounded-xl shadow-lg border border-[#E2E8F0] py-1 animate-in fade-in slide-in-from-top-1 duration-150">
           {STATUS_OPTIONS.map(option => (
             <button
               key={option.value}

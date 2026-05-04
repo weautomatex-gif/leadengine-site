@@ -136,7 +136,8 @@ export default function ScoutRunPage() {
     const duplicate = existingCampaigns.find((c: any) => 
       c.status === 'running' && 
       c.target_industry?.toLowerCase() === currentIndustry.toLowerCase() && 
-      c.location?.toLowerCase() === currentLocation.toLowerCase()
+      c.location?.toLowerCase() === currentLocation.toLowerCase() &&
+      new Date(c.created_at).getTime() > Date.now() - 10 * 60 * 1000
     )
 
     if (duplicate) {
