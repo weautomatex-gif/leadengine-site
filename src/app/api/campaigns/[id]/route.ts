@@ -53,3 +53,30 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    const { userId: clerkId } = await auth()
+    if (!clerkId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const supabase = createServerClient()
+    const { data: user } = await supabase.from('users').select('id').eq('clerk_id', clerkId).single()
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+    const { data: campaign } = await supabase.from('campaigns').select('id').eq('id', id).eq('user_id', user.id).single()
+    if (!campaign) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
+
+    // Delete leads first (if not cascading)
+    await supabase.from('leads').delete().eq('campaign_id', id)
+    const { error } = await supabase.from('campaigns').delete().eq('id', id)
+    
+    if (error) throw error
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete error:', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}

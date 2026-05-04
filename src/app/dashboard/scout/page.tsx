@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { Target, Search, Loader2 } from 'lucide-react'
 
 const INDUSTRIES = [
   'Electrician', 'Plumber', 'Builder', 'Hair Salon', 'Barber', 'Beauty Salon',
@@ -22,6 +24,21 @@ export default function ScoutRunPage() {
   const [status, setStatus] = useState<'idle' | 'running'>('idle')
   const [activeCampaignId, setActiveCampaignId] = useState<string | null>(null)
   const [leadsFound, setLeadsFound] = useState(0)
+  
+  const [creditsLeft, setCreditsLeft] = useState<number | null>(null)
+  const [fetchingCredits, setFetchingCredits] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/dashboard/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.stats) {
+          setCreditsLeft(data.stats.creditsLeft)
+        }
+        setFetchingCredits(false)
+      })
+      .catch(() => setFetchingCredits(false))
+  }, [])
 
   // Auto-generate campaign name
   useEffect(() => {
@@ -45,6 +62,7 @@ export default function ScoutRunPage() {
           
           if (data.campaign.status === 'completed' || data.campaign.status === 'failed') {
             clearInterval(interval)
+            toast.success('Scout run completed!')
             router.push(`/dashboard/campaigns/${activeCampaignId}`)
           }
         }
@@ -58,8 +76,13 @@ export default function ScoutRunPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('running')
+    
+    if (creditsLeft !== null && leadCount > creditsLeft) {
+      toast.error(`Not enough credits. You have ${creditsLeft} credits remaining.`)
+      return
+    }
 
+    setStatus('running')
     const currentIndustry = industry === 'Custom' ? customIndustry : industry
 
     try {
@@ -74,22 +97,25 @@ export default function ScoutRunPage() {
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to start scout run')
+      if (!response.ok) {
+        const errData = await response.json()
+        throw new Error(errData.error || 'Failed to start scout run')
+      }
 
       const data = await response.json()
       setActiveCampaignId(data.campaignId)
-      // Polling will handle the redirect now
-    } catch (error) {
+      toast.info('Scout run started! AI is now searching...')
+    } catch (error: any) {
       console.error(error)
       setStatus('idle')
-      alert('There was an error starting the scout run. Please try again.')
+      toast.error(error.message || 'There was an error starting the scout run. Please try again.')
     }
   }
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-[#0F172A] mb-2">New Scout Run</h2>
+    <div className="max-w-xl mx-auto pb-12">
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-bold text-[#0F172A] tracking-tight mb-2">New Scout Run</h2>
         <p className="text-[#64748B]">Tell our AI who you&apos;re looking for, and we&apos;ll find them.</p>
       </div>
 
@@ -100,7 +126,7 @@ export default function ScoutRunPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm"
+            className="bg-white rounded-2xl border border-[#E2E8F0] p-8 shadow-sm"
             onSubmit={handleSubmit}
           >
             {/* Target Industry */}
@@ -110,7 +136,7 @@ export default function ScoutRunPage() {
                 required
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value)}
-                className="w-full px-4 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent bg-white"
+                className="w-full px-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent bg-white transition-shadow"
               >
                 <option value="" disabled>Select an industry...</option>
                 {INDUSTRIES.map(ind => (
@@ -128,7 +154,7 @@ export default function ScoutRunPage() {
                   placeholder="e.g. Roofers, SaaS Founders..."
                   value={customIndustry}
                   onChange={(e) => setCustomIndustry(e.target.value)}
-                  className="w-full mt-3 px-4 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                  className="w-full mt-3 px-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-shadow"
                 />
               )}
             </div>
@@ -142,22 +168,22 @@ export default function ScoutRunPage() {
                 placeholder="e.g. Leeds, UK"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full px-4 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6]"
+                className="w-full px-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] transition-shadow"
               />
             </div>
 
             {/* Number of Leads */}
             <div className="mb-6">
               <label className="block text-sm font-semibold text-[#0F172A] mb-2">Number of Leads</label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-4 gap-3 mb-2">
                 {[10, 25, 50, 100].map(num => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => setLeadCount(num)}
-                    className={`py-2 text-sm font-semibold rounded-xl border transition-colors ${
+                    className={`py-2.5 text-sm font-semibold rounded-xl border transition-all ${
                       leadCount === num
-                        ? 'bg-[#DBEAFE] border-[#3B82F6] text-[#1E40AF]'
+                        ? 'bg-[#DBEAFE] border-[#3B82F6] text-[#1E40AF] shadow-sm'
                         : 'bg-white border-[#E2E8F0] text-[#64748B] hover:bg-[#F8FAFC]'
                     }`}
                   >
@@ -165,6 +191,11 @@ export default function ScoutRunPage() {
                   </button>
                 ))}
               </div>
+              {!fetchingCredits && creditsLeft !== null && (
+                <p className={`text-xs ${leadCount > creditsLeft ? 'text-red-500 font-semibold' : 'text-[#64748B]'}`}>
+                  This will use <span className="font-bold">{leadCount}</span> of your <span className="font-bold">{creditsLeft}</span> remaining credits.
+                </p>
+              )}
             </div>
 
             {/* Campaign Name */}
@@ -176,15 +207,16 @@ export default function ScoutRunPage() {
                 value={campaignName}
                 onChange={(e) => setCampaignName(e.target.value)}
                 placeholder="Auto-generated"
-                className="w-full px-4 py-2.5 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] bg-[#F8FAFC]"
+                className="w-full px-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] bg-[#F8FAFC] transition-shadow"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-semibold rounded-xl transition-colors shadow-sm"
+              disabled={!fetchingCredits && creditsLeft !== null && leadCount > creditsLeft}
+              className="w-full py-3.5 bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-colors shadow-sm flex items-center justify-center gap-2"
             >
-              Start Scouting →
+              Start Scouting <Target className="w-4 h-4" />
             </button>
           </motion.form>
         ) : (
@@ -194,23 +226,28 @@ export default function ScoutRunPage() {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-white rounded-2xl border border-[#E2E8F0] p-12 shadow-sm flex flex-col items-center justify-center text-center"
           >
-            <div className="relative mb-6">
-              <div className="w-16 h-16 bg-[#3B82F6] rounded-full flex items-center justify-center relative z-10">
-                <span className="text-2xl">🤖</span>
+            <div className="relative mb-8 mt-4">
+              <div className="w-24 h-24 bg-[#DBEAFE] rounded-full flex items-center justify-center relative z-10 border-4 border-white shadow-sm">
+                <Search className="w-10 h-10 text-[#3B82F6] animate-pulse" />
               </div>
               <motion.div
-                animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                transition={{ duration: 2, repeat: Infinity }}
+                animate={{ scale: [1, 2.5], opacity: [0.5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                className="absolute inset-0 bg-[#3B82F6] rounded-full z-0"
+              />
+              <motion.div
+                animate={{ scale: [1, 2.5], opacity: [0.5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 1, ease: "easeOut" }}
                 className="absolute inset-0 bg-[#3B82F6] rounded-full z-0"
               />
             </div>
-            <h3 className="text-xl font-bold text-[#0F172A] mb-2">Scouting in progress...</h3>
-            <p className="text-[#64748B] text-sm animate-pulse mb-6">
-              Scanning for {industry === 'Custom' ? customIndustry : industry}s in {location}...
+            <h3 className="text-2xl font-bold text-[#0F172A] tracking-tight mb-2">Scouting in progress...</h3>
+            <p className="text-[#64748B] mb-8">
+              Scanning for <span className="font-semibold text-[#0F172A]">{industry === 'Custom' ? customIndustry : industry}s</span> in <span className="font-semibold text-[#0F172A]">{location}</span>...<br/>This usually takes 2-3 minutes.
             </p>
-            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-6 py-4 flex flex-col items-center">
-              <span className="text-3xl font-bold text-[#3B82F6] mb-1">{leadsFound}</span>
-              <span className="text-xs font-semibold text-[#64748B] uppercase tracking-wider">Leads Found</span>
+            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl px-8 py-5 flex flex-col items-center shadow-sm w-full max-w-xs">
+              <span className="text-5xl font-extrabold text-[#3B82F6] mb-1 tracking-tight">{leadsFound}</span>
+              <span className="text-xs font-bold text-[#64748B] uppercase tracking-widest">Leads Found</span>
             </div>
           </motion.div>
         )}
