@@ -248,7 +248,7 @@ export default function ScoutRunPage() {
                         : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-slate-300'
                     }`}
                   >
-                    {num}
+                    Up to {num}
                   </button>
                 ))}
               </div>
@@ -275,9 +275,9 @@ export default function ScoutRunPage() {
               </button>
               {!fetchingCredits && creditsLeft !== null && (
                 <p className="text-center text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mt-4">
-                   {leadCount > creditsLeft 
-                     ? `Insufficient credits (${creditsLeft} remaining)` 
-                     : `Uses ${leadCount} of ${creditsLeft} available credits`}
+                   {leadCount > (creditsLeft || 0) 
+                     ? `Insufficient leads (${creditsLeft} remaining)` 
+                     : `Up to ${leadCount} leads · ${creditsLeft} leads remaining this month`}
                 </p>
               )}
             </div>
@@ -351,7 +351,7 @@ export default function ScoutRunPage() {
             {!fetchingCredits && creditsLeft !== null && (
                <div className="pt-4 border-t border-slate-100 w-full text-center">
                   <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">
-                     Using {leadCount} of {creditsLeft} credits
+                     Up to {leadCount} leads · {creditsLeft} leads remaining this month
                   </p>
                </div>
             )}

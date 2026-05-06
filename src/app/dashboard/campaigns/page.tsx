@@ -176,18 +176,9 @@ export default function CampaignsPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="w-full">
-                            <div className="flex justify-between text-[10px] font-semibold uppercase tracking-wider mb-1.5">
-                              <span className="text-[#0F172A]">{found} <span className="text-[#94A3B8]">/ {maxLeads}</span></span>
-                              <span className="text-[#64748B]">{percent}%</span>
-                            </div>
-                            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all duration-1000 ${percent === 100 ? 'bg-emerald-500' : 'bg-[#3B82F6]'}`}
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </div>
+                          <span className="text-xs font-bold text-[#0F172A]">
+                            {found} {found === 1 ? 'lead' : 'leads'} found
+                          </span>
                         </td>
                         <td className="px-4 py-3">
                           <StatusBadge status={displayStatus} />
