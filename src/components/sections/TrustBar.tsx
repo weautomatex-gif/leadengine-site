@@ -5,11 +5,10 @@ import {
   Search, 
   Mail, 
   Calendar, 
-  Sparkles, 
+  Bot, 
   Zap, 
-  Slack, 
-  Infinity, 
-  Database, 
+  MessageSquare, 
+  BarChart3, 
   FileText 
 } from 'lucide-react'
 
@@ -18,11 +17,11 @@ const tools = [
   { name: 'Google', icon: Search },
   { name: 'Gmail', icon: Mail },
   { name: 'Google Calendar', icon: Calendar },
-  { name: 'ChatGPT', icon: Sparkles },
+  { name: 'ChatGPT', icon: Bot },
   { name: 'Claude AI', icon: Zap },
-  { name: 'Slack', icon: Slack },
-  { name: 'Zapier', icon: Infinity },
-  { name: 'HubSpot', icon: Database },
+  { name: 'Slack', icon: MessageSquare },
+  { name: 'Zapier', icon: Zap },
+  { name: 'HubSpot', icon: BarChart3 },
   { name: 'Notion', icon: FileText },
 ]
 
