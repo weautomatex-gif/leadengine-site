@@ -31,6 +31,14 @@ const PROGRESS_PHASES = [
   { id: 'drafting', label: 'Drafting personalized emails...', icon: Mail },
 ]
 
+interface BillingInfo {
+  plan: string;
+  credits_limit: number;
+  credits_used: number;
+  plan_period_end: string | null;
+  has_subscription: boolean;
+}
+
 export default function ScoutRunPage() {
   const router = useRouter()
   
@@ -45,7 +53,7 @@ export default function ScoutRunPage() {
   const [currentPhase, setCurrentPhase] = useState(0)
   const [showFallbackButton, setShowFallbackButton] = useState(false)
   
-  const [billingInfo, setBillingInfo] = useState<any>(null)
+  const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null)
   const [fetchingBilling, setFetchingBilling] = useState(true)
   const [existingCampaigns, setExistingCampaigns] = useState<any[]>([])
 
@@ -288,7 +296,7 @@ export default function ScoutRunPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={!fetchingBilling && billingInfo && leadCount > (billingInfo.credits_limit - billingInfo.credits_used)}
+                disabled={!!(!fetchingBilling && billingInfo && leadCount > (billingInfo.credits_limit - billingInfo.credits_used))}
                 className="w-full py-4 bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-black rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 text-base"
               >
                 Start AI Scout <Sparkles className="w-4 h-4" />

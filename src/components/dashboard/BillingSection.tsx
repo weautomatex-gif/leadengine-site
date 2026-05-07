@@ -53,10 +53,18 @@ const plans = [
   },
 ]
 
+interface BillingInfo {
+  plan: string;
+  credits_limit: number;
+  credits_used: number;
+  plan_period_end: string | null;
+  has_subscription: boolean;
+}
+
 export function BillingSection() {
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
-  const [billingInfo, setBillingInfo] = useState<any>(null)
+  const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null)
   const [upgrading, setUpgrading] = useState<string | null>(null)
   const [managing, setManaging] = useState(false)
 

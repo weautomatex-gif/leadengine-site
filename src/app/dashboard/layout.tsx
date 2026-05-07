@@ -27,13 +27,21 @@ const sidebarLinks = [
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ]
 
+interface BillingInfo {
+  plan: string;
+  credits_limit: number;
+  credits_used: number;
+  plan_period_end: string | null;
+  has_subscription: boolean;
+}
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const { user } = useUser()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
-  const [billingInfo, setBillingInfo] = useState<any>(null)
+  const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null)
 
   // Fetch billing info
   const fetchBillingInfo = async () => {

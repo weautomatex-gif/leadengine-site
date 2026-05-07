@@ -1,6 +1,7 @@
+'use client'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { AnimatedSection } from '../ui/AnimatedSection'
+import AnimatedSection from '../ui/AnimatedSection'
 
 interface Feature {
   text: string
