@@ -1,32 +1,12 @@
 'use client'
 
-import { 
-  MapPin, 
-  Search, 
-  Mail, 
-  Calendar, 
-  Bot, 
-  Zap, 
-  MessageSquare, 
-  BarChart3, 
-  FileText 
-} from 'lucide-react'
-
-const tools = [
-  { name: 'Google Maps', icon: MapPin },
-  { name: 'Google', icon: Search },
-  { name: 'Gmail', icon: Mail },
-  { name: 'Google Calendar', icon: Calendar },
-  { name: 'ChatGPT', icon: Bot },
-  { name: 'Claude AI', icon: Zap },
-  { name: 'Slack', icon: MessageSquare },
-  { name: 'Zapier', icon: Zap },
-  { name: 'HubSpot', icon: BarChart3 },
-  { name: 'Notion', icon: FileText },
+const brands = [
+  'Google Maps', 'Gmail', 'Google Calendar', 'ChatGPT', 'Claude AI', 
+  'Slack', 'Zapier', 'HubSpot', 'Notion', 'Stripe'
 ]
 
 // Duplicate for seamless loop
-const allTools = [...tools, ...tools]
+const allBrands = [...brands, ...brands]
 
 export default function TrustBar() {
   return (
@@ -47,15 +27,14 @@ export default function TrustBar() {
           style={{ background: 'linear-gradient(to left, #F8FAFC, transparent)' }}
         />
 
-        <div className="marquee-track">
-          {allTools.map((tool, i) => (
-            <div
+        <div className="marquee-track flex gap-12 sm:gap-20 py-2">
+          {allBrands.map((brand, i) => (
+            <span
               key={i}
-              className="flex-shrink-0 mx-5 px-6 py-3 rounded-xl bg-white border border-[#E2E8F0] shadow-sm flex items-center gap-3 transition-all duration-300 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 min-w-[140px] justify-center"
+              className="text-lg font-semibold text-[#CBD5E1] hover:text-[#64748B] transition-colors duration-300 tracking-tight whitespace-nowrap cursor-default"
             >
-              <tool.icon className="w-4 h-4 text-[#64748B]" />
-              <span className="text-sm font-semibold text-[#0F172A] whitespace-nowrap">{tool.name}</span>
-            </div>
+              {brand}
+            </span>
           ))}
         </div>
       </div>
