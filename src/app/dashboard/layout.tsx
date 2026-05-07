@@ -15,7 +15,8 @@ import {
   ChevronLeft, 
   Menu, 
   X,
-  ChevronRight
+  ChevronRight,
+  CheckCircle2
 } from 'lucide-react'
 
 const sidebarLinks = [

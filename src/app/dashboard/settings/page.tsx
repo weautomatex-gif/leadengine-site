@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase'
 import { SettingsForm } from '@/components/dashboard/SettingsForm'
 import { ProfileActions } from '@/components/dashboard/SettingsActionButtons'
 import { BillingSection } from '@/components/dashboard/BillingSection'
+import { CheckCircle2 } from 'lucide-react'
 
 export default async function SettingsPage() {
   const { userId: clerkId } = await auth()
