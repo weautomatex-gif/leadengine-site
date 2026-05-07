@@ -54,17 +54,33 @@ export async function POST(request: Request) {
       case 'customer.subscription.updated': {
         const subscription = event.data.object as any
         const userId = subscription.metadata?.user_id
-
-        if (userId) {
-          const status = subscription.status
-          if (status === 'active') {
-            await supabase
-              .from('users')
-              .update({
-                plan_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-              })
-              .eq('id', userId)
+        
+        if (userId && subscription.status === 'active') {
+          // Detect which plan based on price ID
+          const priceId = subscription.items?.data?.[0]?.price?.id
+          
+          let plan = 'free'
+          let creditsLimit = 50
+          
+          if (priceId === process.env.STRIPE_STARTER_PRICE_ID) {
+            plan = 'starter'
+            creditsLimit = 100
+          } else if (priceId === process.env.STRIPE_GROWTH_PRICE_ID) {
+            plan = 'growth'
+            creditsLimit = 300
+          } else if (priceId === process.env.STRIPE_AGENCY_PRICE_ID) {
+            plan = 'agency'
+            creditsLimit = 1000
           }
+          
+          await supabase
+            .from('users')
+            .update({
+              plan,
+              credits_limit: creditsLimit,
+              plan_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            })
+            .eq('id', userId)
         }
         break
       }
