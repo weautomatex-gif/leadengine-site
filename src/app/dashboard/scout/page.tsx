@@ -296,17 +296,21 @@ export default function ScoutRunPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={!!(!fetchingBilling && billingInfo && leadCount > (billingInfo.credits_limit - billingInfo.credits_used))}
+                disabled={!!(!fetchingBilling && billingInfo && leadCount > ((billingInfo?.credits_limit ?? 0) - (billingInfo?.credits_used ?? 0)))}
                 className="w-full py-4 bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-black rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 text-base"
               >
                 Start AI Scout <Sparkles className="w-4 h-4" />
               </button>
-              {!fetchingBilling && billingInfo && (
+              {!fetchingBilling && billingInfo ? (
                 <p className="text-center text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mt-4">
-                   {leadCount > (billingInfo.credits_limit - billingInfo.credits_used) 
-                     ? `Insufficient leads (${billingInfo.credits_limit - billingInfo.credits_used} remaining)` 
-                     : `Up to ${leadCount} leads · ${billingInfo.credits_limit - billingInfo.credits_used} leads remaining this month`}
+                   {leadCount > ((billingInfo?.credits_limit ?? 0) - (billingInfo?.credits_used ?? 0)) 
+                     ? `Insufficient leads (${(billingInfo?.credits_limit ?? 0) - (billingInfo?.credits_used ?? 0)} remaining)` 
+                     : `Up to ${leadCount} leads · ${(billingInfo?.credits_limit ?? 0) - (billingInfo?.credits_used ?? 0)} leads remaining this month`}
                 </p>
+              ) : (
+                <div className="flex justify-center mt-4">
+                  <div className="h-2 w-48 bg-[#F1F5F9] rounded animate-pulse" />
+                </div>
               )}
             </div>
           </motion.form>
@@ -376,12 +380,16 @@ export default function ScoutRunPage() {
             )}
 
             {/* Subtle Credits Footer */}
-            {!fetchingBilling && billingInfo && (
+            {!fetchingBilling && billingInfo ? (
                <div className="pt-4 border-t border-slate-100 w-full text-center">
                   <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">
-                     Up to {leadCount} leads · {billingInfo.credits_limit - billingInfo.credits_used} leads remaining this month
+                     Up to {leadCount} leads · {(billingInfo?.credits_limit ?? 0) - (billingInfo?.credits_used ?? 0)} leads remaining this month
                   </p>
                </div>
+            ) : (
+              <div className="pt-4 border-t border-slate-100 w-full flex justify-center">
+                 <div className="h-2 w-48 bg-slate-50 rounded animate-pulse" />
+              </div>
             )}
           </motion.div>
         )}

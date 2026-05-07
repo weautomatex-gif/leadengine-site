@@ -150,9 +150,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="p-4 border-t border-[#E2E8F0] space-y-4">
               <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
-                  {billingInfo?.plan ? `${billingInfo.plan} Plan` : 'Loading...'}
-                </p>
+                {billingInfo?.plan ? (
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
+                    {billingInfo.plan} Plan
+                  </p>
+                ) : (
+                  <div className="h-3 w-20 bg-[#E2E8F0] rounded animate-pulse mb-1.5" />
+                )}
                 {(!billingInfo || billingInfo.plan === 'free') ? (
                   <>
                     <p className="text-xs text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
@@ -242,9 +246,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               animate={{ opacity: 1 }}
               className="mb-4 p-4 bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl shadow-sm"
             >
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
-                {billingInfo?.plan ? `${billingInfo.plan} Plan` : 'Loading...'}
-              </p>
+              {billingInfo?.plan ? (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
+                  {billingInfo.plan} Plan
+                </p>
+              ) : (
+                <div className="h-3 w-20 bg-[#E2E8F0] rounded animate-pulse mb-1.5" />
+              )}
               {(!billingInfo || billingInfo.plan === 'free') ? (
                 <>
                   <p className="text-[11px] text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
