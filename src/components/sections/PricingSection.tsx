@@ -1,4 +1,22 @@
 import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { AnimatedSection } from '../ui/AnimatedSection'
+
+interface Feature {
+  text: string
+  included: boolean
+  comingSoon?: boolean
+}
+
+interface PricingCardProps {
+  name: string
+  price: string
+  features: Feature[]
+  highlighted?: boolean
+  ctaLabel?: string
+  ctaStyle?: string
+  delay?: number
+}
 
 function PricingCard({ name, price, features, highlighted, ctaLabel, ctaStyle, delay = 0 }: PricingCardProps) {
   return (
