@@ -288,7 +288,7 @@ export default function ScoutRunPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                disabled={!fetchingCredits && creditsLeft !== null && leadCount > creditsLeft}
+                disabled={!fetchingBilling && billingInfo && leadCount > (billingInfo.credits_limit - billingInfo.credits_used)}
                 className="w-full py-4 bg-[#3B82F6] hover:bg-[#2563EB] disabled:bg-slate-200 disabled:cursor-not-allowed text-white font-black rounded-xl transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2 text-base"
               >
                 Start AI Scout <Sparkles className="w-4 h-4" />
