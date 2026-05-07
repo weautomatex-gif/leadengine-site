@@ -66,6 +66,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchBillingInfo()
   }, [])
 
+  useEffect(() => {
+    fetch('/api/auth/ensure-user', { method: 'POST' })
+      .catch(console.error)
+  }, [])
+
   const toggleCollapse = () => {
     const newState = !isCollapsed
     setIsCollapsed(newState)
