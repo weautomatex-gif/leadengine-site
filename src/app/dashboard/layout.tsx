@@ -32,14 +32,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [billingInfo, setBillingInfo] = useState<any>(null)
 
-  // Persist collapse state
+  // Fetch billing info
+  const fetchBillingInfo = async () => {
+    try {
+      const res = await fetch('/api/billing/info')
+      if (res.ok) {
+        const data = await res.json()
+        setBillingInfo(data)
+      }
+    } catch (error) {
+      console.error('Error fetching billing info:', error)
+    }
+  }
+
+  // Persist collapse state and fetch billing
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-collapsed')
     if (saved !== null) {
       setIsCollapsed(saved === 'true')
     }
     setIsLoaded(true)
+    fetchBillingInfo()
   }, [])
 
   const toggleCollapse = () => {
@@ -121,11 +136,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="p-4 border-t border-[#E2E8F0] space-y-4">
               <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl p-4 shadow-sm">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">Starter Plan</p>
-                <p className="text-xs text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
-                <Link href="/dashboard/settings" onClick={() => setIsMobileOpen(false)} className="w-full block py-2 text-center text-xs font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:bg-[#F8FAFC] transition-colors shadow-sm">
-                  Upgrade Plan
-                </Link>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
+                  {billingInfo?.plan ? `${billingInfo.plan} Plan` : 'Loading...'}
+                </p>
+                {(!billingInfo || billingInfo.plan === 'free') ? (
+                  <>
+                    <p className="text-xs text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
+                    <Link href="/dashboard/settings" onClick={() => setIsMobileOpen(false)} className="w-full block py-2 text-center text-xs font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:bg-[#F8FAFC] transition-colors shadow-sm">
+                      Upgrade Plan
+                    </Link>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs py-1">
+                    <CheckCircle2 className="w-4 h-4" /> Professional Account
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-3 px-2">
                 <UserButton afterSignOutUrl="/" />
@@ -203,11 +228,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               animate={{ opacity: 1 }}
               className="mb-4 p-4 bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl shadow-sm"
             >
-              <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">Starter Plan</p>
-              <p className="text-[11px] text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
-              <Link href="/dashboard/settings" className="w-full block py-2 text-center text-[11px] font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:border-[#3B82F6] transition-all shadow-sm active:scale-95">
-                Upgrade Plan
-              </Link>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
+                {billingInfo?.plan ? `${billingInfo.plan} Plan` : 'Loading...'}
+              </p>
+              {(!billingInfo || billingInfo.plan === 'free') ? (
+                <>
+                  <p className="text-[11px] text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
+                  <Link href="/dashboard/settings" className="w-full block py-2 text-center text-[11px] font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:border-[#3B82F6] transition-all shadow-sm active:scale-95">
+                    Upgrade Plan
+                  </Link>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-emerald-600 font-bold text-[11px] py-1">
+                  <CheckCircle2 className="w-4 h-4" /> Professional Account
+                </div>
+              )}
             </motion.div>
           )}
 

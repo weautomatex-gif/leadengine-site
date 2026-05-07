@@ -1,23 +1,4 @@
-'use client'
-
-import { motion } from 'framer-motion'
-import AnimatedSection from '@/components/ui/AnimatedSection'
-
-type Feature = {
-  text: string
-  included: boolean
-  comingSoon?: boolean
-}
-
-interface PricingCardProps {
-  name: string
-  price: string
-  features: Feature[]
-  highlighted?: boolean
-  ctaLabel: string
-  ctaStyle: 'outline' | 'filled'
-  delay?: number
-}
+import Link from 'next/link'
 
 function PricingCard({ name, price, features, highlighted, ctaLabel, ctaStyle, delay = 0 }: PricingCardProps) {
   return (
@@ -74,17 +55,16 @@ function PricingCard({ name, price, features, highlighted, ctaLabel, ctaStyle, d
         </ul>
 
         {/* CTA button */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors duration-200 ${
+        <Link
+          href="/sign-up"
+          className={`w-full py-3 rounded-xl text-sm font-semibold text-center transition-all duration-200 active:scale-[0.98] ${
             ctaStyle === 'filled'
               ? 'bg-[#3B82F6] hover:bg-[#2563EB] text-white shadow-sm'
               : 'border border-[#E2E8F0] hover:border-[#3B82F6] text-[#0F172A] hover:text-[#3B82F6]'
           }`}
         >
           {ctaLabel}
-        </motion.button>
+        </Link>
       </motion.div>
     </AnimatedSection>
   )
@@ -93,58 +73,51 @@ function PricingCard({ name, price, features, highlighted, ctaLabel, ctaStyle, d
 const plans: PricingCardProps[] = [
   {
     name: 'Starter',
-    price: '£49',
+    price: '£29',
     ctaLabel: 'Get Started',
     ctaStyle: 'outline',
     delay: 0,
     features: [
       { text: '100 leads per month', included: true },
-      { text: '5 campaigns', included: true },
+      { text: '5 scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
       { text: 'AI email drafts', included: true },
       { text: 'CSV export', included: true },
-      { text: 'Priority support', included: false },
-      { text: 'Email sending', included: false, comingSoon: true },
-      { text: 'API access', included: false },
     ],
   },
   {
-    name: 'Pro',
-    price: '£99',
+    name: 'Growth',
+    price: '£59',
     ctaLabel: 'Get Started',
     ctaStyle: 'filled',
     highlighted: true,
     delay: 0.08,
     features: [
       { text: '300 leads per month', included: true },
-      { text: '15 campaigns', included: true },
+      { text: 'Unlimited scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
       { text: 'AI email drafts', included: true },
       { text: 'CSV export', included: true },
       { text: 'Priority support', included: true },
-      { text: 'Email sending', included: true, comingSoon: true },
-      { text: 'API access', included: false },
     ],
   },
   {
     name: 'Agency',
-    price: '£199',
+    price: '£149',
     ctaLabel: 'Get Started',
     ctaStyle: 'outline',
     delay: 0.16,
     features: [
       { text: '1,000 leads per month', included: true },
-      { text: 'Unlimited campaigns', included: true },
+      { text: 'Unlimited scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
       { text: 'AI email drafts', included: true },
       { text: 'CSV export', included: true },
       { text: 'Priority support', included: true },
-      { text: 'Email sending', included: true, comingSoon: true },
       { text: 'API access', included: true, comingSoon: true },
-      { text: 'Follow-up sequences', included: true, comingSoon: true },
     ],
   },
 ]

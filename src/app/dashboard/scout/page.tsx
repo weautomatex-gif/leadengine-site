@@ -45,19 +45,19 @@ export default function ScoutRunPage() {
   const [currentPhase, setCurrentPhase] = useState(0)
   const [showFallbackButton, setShowFallbackButton] = useState(false)
   
-  const [creditsLeft, setCreditsLeft] = useState<number | null>(null)
-  const [fetchingCredits, setFetchingCredits] = useState(true)
+  const [billingInfo, setBillingInfo] = useState<any>(null)
+  const [fetchingBilling, setFetchingBilling] = useState(true)
   const [existingCampaigns, setExistingCampaigns] = useState<any[]>([])
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/dashboard/stats').then(res => res.json()),
+      fetch('/api/billing/info').then(res => res.json()),
       fetch('/api/campaigns').then(res => res.json())
-    ]).then(([statsData, campaignsData]) => {
-      if (statsData.stats) setCreditsLeft(statsData.stats.creditsLeft)
+    ]).then(([billingData, campaignsData]) => {
+      if (billingData) setBillingInfo(billingData)
       if (campaignsData) setExistingCampaigns(campaignsData)
-      setFetchingCredits(false)
-    }).catch(() => setFetchingCredits(false))
+      setFetchingBilling(false)
+    }).catch(() => setFetchingBilling(false))
   }, [])
 
   useEffect(() => {
@@ -125,12 +125,32 @@ export default function ScoutRunPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const currentIndustry = (industry === 'Custom' ? customIndustry : industry).trim()
     const currentLocation = location.trim()
+    const currentIndustry = (industry === 'Custom' ? customIndustry : industry).trim()
 
-    if (creditsLeft !== null && leadCount > creditsLeft) {
-      toast.error(`Not enough credits. You have ${creditsLeft} remaining.`)
-      return
+    // 1. Check for total credit limits
+    if (billingInfo) {
+      if (billingInfo.credits_used >= billingInfo.credits_limit) {
+        if (confirm("You've used all your leads this month. Upgrade your plan for more?")) {
+          router.push('/dashboard/settings')
+        }
+        return
+      }
+
+      // 2. Check for lead count vs remaining credits
+      const remainingCredits = billingInfo.credits_limit - billingInfo.credits_used
+      if (leadCount > remainingCredits) {
+        toast.error(`Not enough leads remaining. You have ${remainingCredits} remaining.`)
+        return
+      }
+
+      // 3. Check for free plan scout limits (3 max)
+      if (billingInfo.plan === 'free' && existingCampaigns.length >= 3) {
+        if (confirm("Free plan is limited to 3 scout campaigns. Upgrade to continue?")) {
+          router.push('/dashboard/settings')
+        }
+        return
+      }
     }
 
     const duplicate = existingCampaigns.find((c: any) => 
@@ -273,11 +293,11 @@ export default function ScoutRunPage() {
               >
                 Start AI Scout <Sparkles className="w-4 h-4" />
               </button>
-              {!fetchingCredits && creditsLeft !== null && (
+              {!fetchingBilling && billingInfo && (
                 <p className="text-center text-[10px] font-bold text-[#94A3B8] uppercase tracking-widest mt-4">
-                   {leadCount > (creditsLeft || 0) 
-                     ? `Insufficient leads (${creditsLeft} remaining)` 
-                     : `Up to ${leadCount} leads · ${creditsLeft} leads remaining this month`}
+                   {leadCount > (billingInfo.credits_limit - billingInfo.credits_used) 
+                     ? `Insufficient leads (${billingInfo.credits_limit - billingInfo.credits_used} remaining)` 
+                     : `Up to ${leadCount} leads · ${billingInfo.credits_limit - billingInfo.credits_used} leads remaining this month`}
                 </p>
               )}
             </div>
@@ -348,10 +368,10 @@ export default function ScoutRunPage() {
             )}
 
             {/* Subtle Credits Footer */}
-            {!fetchingCredits && creditsLeft !== null && (
+            {!fetchingBilling && billingInfo && (
                <div className="pt-4 border-t border-slate-100 w-full text-center">
                   <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">
-                     Up to {leadCount} leads · {creditsLeft} leads remaining this month
+                     Up to {leadCount} leads · {billingInfo.credits_limit - billingInfo.credits_used} leads remaining this month
                   </p>
                </div>
             )}
