@@ -153,13 +153,18 @@ export default function HeroSection() {
                   placeholder="Enter your work email"
                   className="flex-1 px-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all bg-white"
                 />
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
+                <button 
+                  onClick={() => {
+                    const emailInput = document.querySelector('#hero-cta input[type="email"]') as HTMLInputElement
+                    const email = emailInput?.value || ''
+                    window.location.href = email 
+                      ? `/sign-up?email=${encodeURIComponent(email)}` 
+                      : '/sign-up'
+                  }}
                   className="px-6 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold rounded-xl transition-colors duration-200 shadow-sm whitespace-nowrap"
                 >
                   Start Free Trial →
-                </motion.button>
+                </button>
               </div>
               <p className="text-sm text-[#94A3B8]">
                 No credit card required · 50 free leads to start
