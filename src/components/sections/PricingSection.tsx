@@ -97,7 +97,7 @@ const plans: PricingCardProps[] = [
     ctaStyle: 'outline',
     delay: 0,
     features: [
-      { text: '50 leads to get started', included: true },
+      { text: 'Up to 50 leads to get started', included: true },
       { text: '3 scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
@@ -110,7 +110,7 @@ const plans: PricingCardProps[] = [
     ctaStyle: 'outline',
     delay: 0.08,
     features: [
-      { text: '100 leads per month', included: true },
+      { text: 'Up to 100 leads per month', included: true },
       { text: '5 scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
@@ -126,7 +126,7 @@ const plans: PricingCardProps[] = [
     highlighted: true,
     delay: 0.16,
     features: [
-      { text: '300 leads per month', included: true },
+      { text: 'Up to 300 leads per month', included: true },
       { text: '50 scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
@@ -142,7 +142,7 @@ const plans: PricingCardProps[] = [
     ctaStyle: 'outline',
     delay: 0.24,
     features: [
-      { text: '1,000 leads per month', included: true },
+      { text: 'Up to 1,000 leads per month', included: true },
       { text: 'Unlimited scout campaigns', included: true },
       { text: 'Everything in Growth', included: true },
       { text: 'API access', included: true, comingSoon: true },

@@ -11,7 +11,7 @@ const plans = [
     name: 'Starter',
     price: '£29',
     features: [
-      '100 leads per month',
+      'Up to 100 leads per month',
       '5 scout campaigns',
       'AI lead qualification',
       'Email & phone finding',
@@ -23,7 +23,7 @@ const plans = [
     name: 'Growth',
     price: '£59',
     features: [
-      '300 leads per month',
+      'Up to 300 leads per month',
       '50 scout campaigns',
       'AI lead qualification',
       'Email & phone finding',
@@ -38,7 +38,7 @@ const plans = [
     name: 'Agency',
     price: '£149',
     features: [
-      '1,000 leads per month',
+      'Up to 1,000 leads per month',
       'Unlimited scout campaigns',
       'Everything in Growth',
       'API access (coming soon)',
