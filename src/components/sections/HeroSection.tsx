@@ -146,25 +146,12 @@ export default function HeroSection() {
 
             <AnimatedSection delay={0.2} id="hero-cta">
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your work email"
-                  className="flex-1 px-4 py-3 border border-[#E2E8F0] rounded-xl text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#3B82F6] focus:border-transparent transition-all bg-white"
-                />
-                <button 
-                  onClick={() => {
-                    const emailInput = document.querySelector('#hero-cta input[type="email"]') as HTMLInputElement
-                    const email = emailInput?.value || ''
-                    window.location.href = email 
-                      ? `/sign-up?email=${encodeURIComponent(email)}` 
-                      : '/sign-up'
-                  }}
-                  className="px-6 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-semibold rounded-xl transition-colors duration-200 shadow-sm whitespace-nowrap"
+                <a 
+                  href="/sign-up"
+                  className="inline-flex items-center gap-2 px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-base font-semibold rounded-xl transition-colors duration-200 shadow-sm"
                 >
-                  Start Free Trial →
-                </button>
+                  Get Started Free →
+                </a>
               </div>
               <p className="text-sm text-[#94A3B8]">
                 No credit card required · 50 free leads to start
