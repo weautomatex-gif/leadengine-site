@@ -28,6 +28,7 @@ import {
   Zap
 } from 'lucide-react'
 
+import { createPortal } from 'react-dom'
 import { StatusSelect } from '@/components/ui/StatusSelect'
 
 // Slide-over Panel Component
@@ -40,17 +41,16 @@ function LeadDetailPanel({ lead, isOpen, onClose, onUpdateStatus, onUpdateNotes 
 
   if (!isOpen || !lead) return null
 
-  return (
-    <AnimatePresence>
-      <motion.div 
-        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50"
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 z-[9998] bg-black/30 backdrop-blur-[2px]" 
         onClick={onClose}
       />
-      <motion.div
-        initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-        className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-2xl z-50 overflow-y-auto border-l border-[#E2E8F0] flex flex-col"
-      >
+      
+      {/* Panel */}
+      <div className="fixed top-0 right-0 bottom-0 z-[9999] w-full max-w-lg bg-white shadow-2xl border-l border-[#E2E8F0] overflow-y-auto flex flex-col">
         {/* Panel Header */}
         <div className="sticky top-0 bg-white border-b border-[#E2E8F0] px-6 py-5 flex items-center justify-between z-10 shadow-sm">
           <div className="flex flex-col min-w-0">
@@ -200,8 +200,9 @@ function LeadDetailPanel({ lead, isOpen, onClose, onUpdateStatus, onUpdateNotes 
             />
           </div>
         </div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </>,
+    document.body
   )
 }
 

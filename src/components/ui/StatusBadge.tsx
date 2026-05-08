@@ -45,6 +45,7 @@ export function StatusBadge({ status }: { status: string }) {
   const leadStyles: Record<string, string> = {
     new: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-900 shadow-sm shadow-amber-200/50',
     contacted: 'bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-200',
+    no_answer: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200',
     replied: 'bg-purple-100 text-purple-700 ring-1 ring-inset ring-purple-200',
     qualified: 'bg-emerald-100 text-emerald-700 ring-1 ring-inset ring-emerald-200',
     won: 'bg-gradient-to-r from-emerald-500 to-green-400 text-white shadow-sm shadow-emerald-300/50',

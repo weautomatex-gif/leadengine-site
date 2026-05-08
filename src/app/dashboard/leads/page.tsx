@@ -172,7 +172,7 @@ export default function LeadsPage() {
   }
 
   const campaignMap = useMemo(() => new Map(campaigns.map(c => [c.id, c.name])), [campaigns])
-  const statusOptions = ['New', 'Contacted', 'Replied', 'Qualified', 'Won', 'Lost']
+  const statusOptions = ['New', 'Contacted', 'No Answer', 'Replied', 'Qualified', 'Won', 'Lost']
   const verdictOptions = ['NO_SITE', 'OUTDATED', 'DATED', 'BROKEN', 'ACCEPTABLE', 'MODERN']
 
   const totalPages = Math.ceil(totalCount / limit)

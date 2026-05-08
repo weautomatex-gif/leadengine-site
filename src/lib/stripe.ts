@@ -23,7 +23,7 @@ export const PLANS = {
   growth: {
     name: 'Growth',
     leads_limit: 300,
-    scouts_limit: 999,
+    scouts_limit: 50,
     price: 59,
     priceId: process.env.STRIPE_GROWTH_PRICE_ID!,
   },

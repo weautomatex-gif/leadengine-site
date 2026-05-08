@@ -91,18 +91,31 @@ function PricingCard({ name, price, features, highlighted, ctaLabel, ctaStyle, d
 
 const plans: PricingCardProps[] = [
   {
+    name: 'Free',
+    price: '£0',
+    ctaLabel: 'Get Started Free',
+    ctaStyle: 'outline',
+    delay: 0,
+    features: [
+      { text: '50 leads to get started', included: true },
+      { text: '3 scout campaigns', included: true },
+      { text: 'AI lead qualification', included: true },
+      { text: 'Email & phone finding', included: true },
+    ],
+  },
+  {
     name: 'Starter',
     price: '£29',
     ctaLabel: 'Get Started',
     ctaStyle: 'outline',
-    delay: 0,
+    delay: 0.08,
     features: [
       { text: '100 leads per month', included: true },
       { text: '5 scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
-      { text: 'AI email drafts', included: true },
-      { text: 'CSV export', included: true },
+      { text: 'AI email drafts', included: false },
+      { text: 'CSV export', included: false },
     ],
   },
   {
@@ -111,10 +124,10 @@ const plans: PricingCardProps[] = [
     ctaLabel: 'Get Started',
     ctaStyle: 'filled',
     highlighted: true,
-    delay: 0.08,
+    delay: 0.16,
     features: [
       { text: '300 leads per month', included: true },
-      { text: 'Unlimited scout campaigns', included: true },
+      { text: '50 scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
       { text: 'AI email drafts', included: true },
@@ -127,15 +140,11 @@ const plans: PricingCardProps[] = [
     price: '£149',
     ctaLabel: 'Get Started',
     ctaStyle: 'outline',
-    delay: 0.16,
+    delay: 0.24,
     features: [
       { text: '1,000 leads per month', included: true },
       { text: 'Unlimited scout campaigns', included: true },
-      { text: 'AI lead qualification', included: true },
-      { text: 'Email & phone finding', included: true },
-      { text: 'AI email drafts', included: true },
-      { text: 'CSV export', included: true },
-      { text: 'Priority support', included: true },
+      { text: 'Everything in Growth', included: true },
       { text: 'API access', included: true, comingSoon: true },
     ],
   },
@@ -161,7 +170,7 @@ export default function PricingSection() {
         </AnimatedSection>
 
         {/* Cards grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start">
           {plans.map((plan) => (
             <PricingCard key={plan.name} {...plan} />
           ))}

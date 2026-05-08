@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 const STATUS_OPTIONS = [
   { value: 'new', label: 'New', style: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-900' },
   { value: 'contacted', label: 'Contacted', style: 'bg-blue-100 text-blue-700' },
+  { value: 'no_answer', label: 'No Answer', style: 'bg-orange-100 text-orange-700 ring-1 ring-inset ring-orange-200' },
   { value: 'replied', label: 'Replied', style: 'bg-purple-100 text-purple-700' },
   { value: 'qualified', label: 'Qualified', style: 'bg-emerald-100 text-emerald-700' },
   { value: 'won', label: 'Won', style: 'bg-gradient-to-r from-emerald-500 to-green-400 text-white' },
