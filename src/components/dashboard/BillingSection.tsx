@@ -12,7 +12,7 @@ const plans = [
     price: '£29',
     features: [
       'Up to 100 leads per month',
-      '5 scout campaigns',
+      '15 scout campaigns',
       'AI lead qualification',
       'Email & phone finding',
     ],

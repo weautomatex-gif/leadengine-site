@@ -154,7 +154,7 @@ export default function HeroSection() {
                 </a>
               </div>
               <p className="text-sm text-[#94A3B8]">
-                No credit card required · 50 free leads to start
+                No credit card required · Up to 50 free leads to start
               </p>
             </AnimatedSection>
           </div>

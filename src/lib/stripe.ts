@@ -16,7 +16,7 @@ export const PLANS = {
   starter: {
     name: 'Starter',
     leads_limit: 100,
-    scouts_limit: 5,
+    scouts_limit: 15,
     price: 29,
     priceId: process.env.STRIPE_STARTER_PRICE_ID!,
   },

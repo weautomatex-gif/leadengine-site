@@ -111,7 +111,7 @@ const plans: PricingCardProps[] = [
     delay: 0.08,
     features: [
       { text: 'Up to 100 leads per month', included: true },
-      { text: '5 scout campaigns', included: true },
+      { text: '15 scout campaigns', included: true },
       { text: 'AI lead qualification', included: true },
       { text: 'Email & phone finding', included: true },
       { text: 'AI email drafts', included: false },
