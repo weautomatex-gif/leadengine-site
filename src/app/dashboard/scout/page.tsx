@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   Circle
 } from 'lucide-react'
+import { GooeyLoader } from '@/components/ui/GooeyLoader'
 
 const INDUSTRIES = [
   'Electrician', 'Plumber', 'Builder', 'Hair Salon', 'Barber', 'Beauty Salon',
@@ -322,16 +323,7 @@ export default function ScoutRunPage() {
             className="bg-white rounded-3xl border border-[#E2E8F0] p-10 shadow-sm flex flex-col items-center space-y-8"
           >
             {/* Animated Radar - Scaled Down */}
-            <div className="relative">
-              <div className="w-20 h-20 bg-[#EFF6FF] rounded-full flex items-center justify-center relative z-10 border-4 border-white shadow-md">
-                 <Search className="w-8 h-8 text-[#3B82F6] animate-pulse" />
-              </div>
-              <motion.div
-                animate={{ scale: [1, 2], opacity: [0.4, 0] }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                className="absolute inset-0 bg-[#3B82F6] rounded-full z-0"
-              />
-            </div>
+            <GooeyLoader className="mb-6" />
 
             <div className="text-center space-y-1">
               <h3 className="text-xl font-black text-[#0F172A] tracking-tight">AI Scout in Progress</h3>

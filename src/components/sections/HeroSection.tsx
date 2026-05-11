@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import AnimatedSection from '@/components/ui/AnimatedSection'
+import { TextMarquee } from '@/components/ui/TextMarquee'
+import { ButtonShimmer } from '@/components/ui/ButtonShimmer'
 
 const leads = [
   { business: 'The Amber Kitchen', industry: 'Restaurant', city: 'Manchester', email: 'hello@amberkitchen.co.uk', status: 'New' },
@@ -125,6 +127,24 @@ export default function HeroSection() {
               </h1>
             </AnimatedSection>
 
+            <AnimatedSection delay={0.07}>
+              <TextMarquee
+                prefix="Built for"
+                items={[
+                  "Web Design Agencies",
+                  "Sales Teams",
+                  "Marketing Agencies",
+                  "Recruitment Firms",
+                  "SaaS Companies",
+                  "Freelancers",
+                  "Consultancies",
+                  "B2B Startups",
+                ]}
+                speed={0.8}
+                className="text-lg md:text-xl mb-4"
+              />
+            </AnimatedSection>
+
             <AnimatedSection delay={0.1}>
               <p className="text-lg text-[#64748B] leading-relaxed mb-7 max-w-xl">
                 LeadEngine uses AI to find businesses in any niche and location, verifies their contact details, and drafts personalised outreach emails — all on autopilot.
@@ -146,12 +166,9 @@ export default function HeroSection() {
 
             <AnimatedSection delay={0.2} id="hero-cta">
               <div className="flex flex-col sm:flex-row gap-3 mb-4">
-                <a 
-                  href="/sign-up"
-                  className="inline-flex items-center gap-2 px-8 py-4 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-base font-semibold rounded-xl transition-colors duration-200 shadow-sm"
-                >
+                <ButtonShimmer href="/sign-up" className="px-8 py-4 text-base">
                   Get Started Free →
-                </a>
+                </ButtonShimmer>
               </div>
               <p className="text-sm text-[#94A3B8]">
                 No credit card required · Up to 50 free leads to start

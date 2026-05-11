@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
-import { MoreVertical, Trash2, Eye, Folder, Target, ArrowUpDown, ChevronRight, CheckCircle } from 'lucide-react'
+import { MoreVertical, Trash2, Eye, Folder, Target, ArrowUpDown, ChevronRight, CheckCircle, Search, Zap } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { TableRowSkeleton } from '@/components/ui/SkeletonLoader'
+import { ButtonShimmer } from '@/components/ui/ButtonShimmer'
+import { InteractiveEmptyState } from '@/components/ui/InteractiveEmptyState'
 
 export default function CampaignsPage() {
   const router = useRouter()
@@ -95,13 +97,13 @@ export default function CampaignsPage() {
           <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight mb-1">Your Campaigns</h2>
           <p className="text-[#94A3B8] text-xs font-semibold uppercase tracking-widest">Manage your scout runs and view their progress.</p>
         </div>
-        <Link
+        <ButtonShimmer
           href="/dashboard/scout"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-black rounded-2xl transition-all shadow-lg active:scale-95"
+          className="shadow-lg"
         >
           <Target className="w-4 h-4" />
           New Scout Run
-        </Link>
+        </ButtonShimmer>
       </div>
 
       {loading ? (
@@ -109,16 +111,19 @@ export default function CampaignsPage() {
           {[1, 2, 3, 4].map(i => <TableRowSkeleton key={i} />)}
         </div>
       ) : !campaigns || campaigns.length === 0 ? (
-        <EmptyState
-          icon={<Folder className="w-8 h-8" />}
-          title="No campaigns yet"
-          description="You haven't run any campaigns. Start a new scout run to find leads in your target industry."
-          action={
-            <Link href="/dashboard/scout" className="px-6 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-black rounded-2xl transition-all shadow-lg mt-4">
-              Start your first scout run →
-            </Link>
-          }
-        />
+        <div className="p-6 bg-white rounded-[32px] border border-[#E2E8F0] shadow-sm">
+          <InteractiveEmptyState
+            title="No campaigns yet"
+            description="Create your first campaign to start discovering leads in your target industry and location."
+            icons={[
+              <Folder key="f" className="w-5 h-5" />,
+              <Search key="s" className="w-6 h-6" />,
+              <Zap key="z" className="w-5 h-5" />,
+            ]}
+            actionLabel="New Scout Run →"
+            actionHref="/dashboard/scout"
+          />
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="flex justify-end">

@@ -17,10 +17,13 @@ import {
   Target,
   ArrowUpRight,
   MoreVertical,
-  Eye
+  Eye,
+  Mail,
+  FileText
 } from 'lucide-react'
 import { StatusSelect } from '@/components/ui/StatusSelect'
 import { VerdictBadge } from '@/components/ui/VerdictBadge'
+import { InteractiveEmptyState } from '@/components/ui/InteractiveEmptyState'
 export default function LeadsPage() {
   const [leads, setLeads] = useState<any[]>([])
   const [campaigns, setCampaigns] = useState<any[]>([])
@@ -302,18 +305,18 @@ export default function LeadsPage() {
             {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <div key={i} className="h-14 w-full bg-slate-50 animate-pulse rounded-2xl" />)}
           </div>
         ) : (!leads || leads.length === 0) ? (
-          <div className="p-20 flex flex-col items-center text-center">
-             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 text-slate-300 ring-8 ring-slate-50/50">
-               <Users className="w-10 h-10" />
-             </div>
-             <p className="text-[#0F172A] text-xl font-black mb-2 tracking-tight">No leads found.</p>
-             <p className="text-[#64748B] text-sm max-w-sm font-bold leading-relaxed mb-8">We couldn't find any leads matching your current filter settings. Try clearing them to see more.</p>
-             <button 
-               onClick={() => { setStatusFilter('All'); setVerdictFilter('All'); setCampaignFilter('All'); setSearchQuery('') }}
-               className="px-8 py-3 bg-[#3B82F6] text-white font-bold rounded-xl shadow-lg hover:bg-[#2563EB] transition-all active:scale-95"
-             >
-               Clear All Filters
-             </button>
+          <div className="p-12">
+            <InteractiveEmptyState
+              title="No leads discovered"
+              description="Your leads will appear here once you run a scout campaign. Each lead includes contact details, website audit, and a personalised email draft."
+              icons={[
+                <Mail key="m" className="w-5 h-5" />,
+                <Users key="u" className="w-6 h-6" />,
+                <FileText key="f" className="w-5 h-5" />,
+              ]}
+              actionLabel="Start Scouting →"
+              actionHref="/dashboard/scout"
+            />
           </div>
         ) : (
           <div>

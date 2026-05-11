@@ -17,12 +17,15 @@ import {
   TrendingUp,
   ArrowUpRight,
   Search,
-  FolderOpen
+  FolderOpen,
+  Sparkles
 } from 'lucide-react'
 import { CardSkeleton } from '@/components/ui/SkeletonLoader'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { VerdictBadge } from '@/components/ui/VerdictBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ButtonShimmer } from '@/components/ui/ButtonShimmer'
+import { InteractiveEmptyState } from '@/components/ui/InteractiveEmptyState'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -72,13 +75,13 @@ export default function DashboardPage() {
           <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight text-left">Dashboard Overview</h2>
           <p className="text-[#94A3B8] text-xs font-semibold uppercase tracking-widest mt-1 text-left">Here&apos;s your scouting performance at a glance.</p>
         </div>
-        <Link
+        <ButtonShimmer
           href="/dashboard/scout"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#3B82F6] hover:bg-[#2563EB] text-white text-sm font-black rounded-2xl transition-all shadow-lg active:scale-95"
+          className="shadow-lg"
         >
           <Target className="w-4 h-4" />
           New Scout Run
-        </Link>
+        </ButtonShimmer>
       </div>
 
       {/* Stat Cards */}
@@ -179,13 +182,18 @@ export default function DashboardPage() {
 
           <div className="flex-1">
             {(!data?.recentLeads || data.recentLeads.length === 0) ? (
-              <div className="p-12 flex flex-col items-center justify-center h-full text-center">
-                <Users className="w-10 h-10 text-slate-300 mb-4" />
-                <h4 className="text-[#0F172A] font-semibold mb-1">No leads yet</h4>
-                <p className="text-sm text-[#64748B] mb-4">You haven&apos;t captured any leads.</p>
-                <Link href="/dashboard/scout" className="text-sm font-semibold text-[#3B82F6] hover:text-[#2563EB] flex items-center gap-1">
-                  Start Scouting <ChevronRight className="w-4 h-4" />
-                </Link>
+              <div className="p-6">
+                <InteractiveEmptyState
+                  title="No leads yet"
+                  description="Run your first scout to discover businesses in your target market. Choose an industry and location, and let AI do the rest."
+                  icons={[
+                    <Target key="t" className="w-5 h-5" />,
+                    <Users key="u" className="w-6 h-6" />,
+                    <Sparkles key="s" className="w-5 h-5" />,
+                  ]}
+                  actionLabel="Start Scouting →"
+                  actionHref="/dashboard/scout"
+                />
               </div>
             ) : (
               <div className="overflow-x-auto">

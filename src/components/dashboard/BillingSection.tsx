@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Check, Loader2, CreditCard, Sparkles } from 'lucide-react'
+import { ButtonShimmer } from '@/components/ui/ButtonShimmer'
 
 const plans = [
   {
@@ -210,18 +211,29 @@ export function BillingSection() {
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={() => handleUpgrade(plan.key)}
-                disabled={!!upgrading}
-                className={`w-full py-3 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 ${
-                  plan.popular 
-                    ? 'bg-[#3B82F6] hover:bg-[#2563EB] text-white' 
-                    : 'bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-[#0F172A]'
-                } disabled:opacity-50`}
-              >
-                {upgrading === plan.key ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                Upgrade to {plan.name}
-              </button>
+              {plan.key === 'growth' ? (
+                <ButtonShimmer
+                  onClick={() => handleUpgrade(plan.key)}
+                  disabled={!!upgrading}
+                  className="w-full"
+                >
+                  {upgrading === plan.key ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  Upgrade to {plan.name}
+                </ButtonShimmer>
+              ) : (
+                <button
+                  onClick={() => handleUpgrade(plan.key)}
+                  disabled={!!upgrading}
+                  className={`w-full py-3 rounded-xl text-sm font-bold transition-all shadow-sm flex items-center justify-center gap-2 ${
+                    plan.popular 
+                      ? 'bg-[#3B82F6] hover:bg-[#2563EB] text-white' 
+                      : 'bg-[#F8FAFC] border border-[#E2E8F0] hover:bg-[#F1F5F9] text-[#0F172A]'
+                  } disabled:opacity-50`}
+                >
+                  {upgrading === plan.key ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  Upgrade to {plan.name}
+                </button>
+              )}
             </div>
           ))}
         </div>
