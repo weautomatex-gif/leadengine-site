@@ -11,9 +11,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://findmealead.com'),
   title: 'LeadEngine — AI-Powered Lead Generation for Agencies',
   description:
-    'LeadEngine uses AI to find local businesses with weak websites, audit their online presence, find contact details, and draft personalised outreach emails — all on autopilot.',
+    'FindMeALead uses AI to discover businesses in any niche, verify contact details, and draft personalised outreach emails — all on autopilot. Start free at findmealead.com',
   keywords: ['lead generation', 'AI leads', 'agency tools', 'email outreach', 'local business leads'],
   icons: {
     icon: '/favicon.svg',
@@ -22,6 +23,11 @@ export const metadata: Metadata = {
     title: 'LeadEngine — AI-Powered Lead Generation',
     description: 'Find businesses that need you. Before they find someone else.',
     type: 'website',
+    url: 'https://findmealead.com',
+    siteName: 'FindMeALead',
+  },
+  alternates: {
+    canonical: 'https://findmealead.com',
   },
 }
 
