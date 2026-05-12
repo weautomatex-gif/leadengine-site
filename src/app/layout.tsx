@@ -15,6 +15,9 @@ export const metadata: Metadata = {
   description:
     'LeadEngine uses AI to find local businesses with weak websites, audit their online presence, find contact details, and draft personalised outreach emails — all on autopilot.',
   keywords: ['lead generation', 'AI leads', 'agency tools', 'email outreach', 'local business leads'],
+  icons: {
+    icon: '/favicon.svg',
+  },
   openGraph: {
     title: 'LeadEngine — AI-Powered Lead Generation',
     description: 'Find businesses that need you. Before they find someone else.',
