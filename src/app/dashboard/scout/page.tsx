@@ -43,6 +43,7 @@ interface BillingInfo {
 export default function ScoutRunPage() {
   const router = useRouter()
   
+  const [businessType, setBusinessType] = useState<'website_agency' | 'general_b2b' | 'marketing_agency' | 'recruitment'>('website_agency')
   const [industry, setIndustry] = useState('')
   const [customIndustry, setCustomIndustry] = useState('')
   const [location, setLocation] = useState('')
@@ -134,6 +135,10 @@ export default function ScoutRunPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!businessType) {
+      toast.error('Please select a business type.')
+      return
+    }
     const currentLocation = location.trim()
     const currentIndustry = (industry === 'Custom' ? customIndustry : industry).trim()
 
@@ -190,6 +195,7 @@ export default function ScoutRunPage() {
           target_industry: currentIndustry,
           location: currentLocation,
           lead_count: leadCount,
+          business_type: businessType,
         }),
       })
 
@@ -224,6 +230,81 @@ export default function ScoutRunPage() {
             className="bg-white rounded-3xl border border-[#E2E8F0] p-8 shadow-sm space-y-6"
             onSubmit={handleSubmit}
           >
+            {/* Business Type Selector */}
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-[#0F172A] uppercase tracking-widest ml-1">
+                WHAT ARE YOU LOOKING FOR LEADS FOR?
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Website Agency - Enabled */}
+                <div
+                  onClick={() => setBusinessType('website_agency')}
+                  className="relative flex flex-col justify-between rounded-xl p-4 cursor-pointer transition-all border-2 border-[#3B82F6] bg-white"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="text-sm font-bold text-[#0F172A]">Website Agency</h4>
+                      <p className="text-xs text-[#64748B] mt-1 font-medium leading-relaxed">
+                        Find businesses that need a website or redesign
+                      </p>
+                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-[#3B82F6] shrink-0" />
+                  </div>
+                </div>
+
+                {/* General B2B - Disabled */}
+                <div className="flex flex-col justify-between rounded-xl p-4 bg-[#F8FAFC] border border-[#E2E8F0] opacity-60 cursor-not-allowed">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-[#0F172A]">General B2B</h4>
+                        <span className="text-[9px] font-bold bg-[#F1F5F9] text-[#94A3B8] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1 font-medium leading-relaxed">
+                        Find any business in your target market
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Marketing Agency - Disabled */}
+                <div className="flex flex-col justify-between rounded-xl p-4 bg-[#F8FAFC] border border-[#E2E8F0] opacity-60 cursor-not-allowed">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-[#0F172A]">Marketing Agency</h4>
+                        <span className="text-[9px] font-bold bg-[#F1F5F9] text-[#94A3B8] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1 font-medium leading-relaxed">
+                        Find businesses that need marketing help
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Recruitment - Disabled */}
+                <div className="flex flex-col justify-between rounded-xl p-4 bg-[#F8FAFC] border border-[#E2E8F0] opacity-60 cursor-not-allowed">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-sm font-bold text-[#0F172A]">Recruitment</h4>
+                        <span className="text-[9px] font-bold bg-[#F1F5F9] text-[#94A3B8] px-2 py-0.5 rounded-full uppercase tracking-wide">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#64748B] mt-1 font-medium leading-relaxed">
+                        Find businesses that are hiring
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label className="text-[10px] font-black text-[#0F172A] uppercase tracking-widest ml-1">Target Industry</label>
               <select
