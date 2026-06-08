@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     // Support either an array of leads or a single lead for backward compatibility
     const leadsToInsert = leads || (lead ? [lead] : [])
 
-    if (!campaign_id || leadsToInsert.length === 0) {
+    if (!campaign_id) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
@@ -33,48 +33,53 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
     }
 
-    // Format leads for bulk insert
-    const formattedLeads = leadsToInsert.map((l: any) => ({
-      campaign_id,
-      ...l,
-      status: l.status || 'new',
-    }))
+    // Format leads for bulk insert (only if there are leads to insert)
+    let insertedLeadsCount = 0
 
-    // Insert all leads
-    const { error: leadsError, data: insertedLeads } = await supabase
-      .from('leads')
-      .insert(formattedLeads)
-      .select('id')
+    if (leadsToInsert.length > 0) {
+      const formattedLeads = leadsToInsert.map((l: any) => ({
+        campaign_id,
+        ...l,
+        status: l.status || 'new',
+      }))
 
-    if (leadsError) {
-      console.error('Error inserting leads:', leadsError)
-      return NextResponse.json({ error: 'Failed to insert leads' }, { status: 500 })
+      // Insert all leads
+      const { error: leadsError, data: insertedLeads } = await supabase
+        .from('leads')
+        .insert(formattedLeads)
+        .select('id')
+
+      if (leadsError) {
+        console.error('Error inserting leads:', leadsError)
+        return NextResponse.json({ error: 'Failed to insert leads' }, { status: 500 })
+      }
+
+      insertedLeadsCount = insertedLeads?.length || leadsToInsert.length
+
+      // Increment credits_used on user by the number of inserted leads
+      const { data: user } = await supabase
+        .from('users')
+        .select('credits_used')
+        .eq('id', campaign.user_id)
+        .single()
+
+      if (user) {
+        await supabase
+          .from('users')
+          .update({ credits_used: (user.credits_used || 0) + insertedLeadsCount })
+          .eq('id', campaign.user_id)
+      }
     }
 
-    const insertedLeadsCount = insertedLeads?.length || leadsToInsert.length
-
-    // Update campaign status to completed and set leads_found count
+    // Always update campaign status to completed regardless of lead count
     await supabase
       .from('campaigns')
-      .update({ 
-        status: 'completed', 
-        leads_found: insertedLeadsCount 
+      .update({
+        status: 'completed',
+        leads_found: insertedLeadsCount,
+        completed_at: new Date().toISOString(),
       })
       .eq('id', campaign_id)
-
-    // Increment credits_used on user by the number of inserted leads
-    const { data: user } = await supabase
-      .from('users')
-      .select('credits_used')
-      .eq('id', campaign.user_id)
-      .single()
-
-    if (user) {
-      await supabase
-        .from('users')
-        .update({ credits_used: (user.credits_used || 0) + insertedLeadsCount })
-        .eq('id', campaign.user_id)
-    }
 
     return NextResponse.json({ success: true, inserted: insertedLeadsCount }, { status: 200 })
   } catch (error) {
