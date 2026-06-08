@@ -320,82 +320,141 @@ export default function LeadsPage() {
           </div>
         ) : (
           <div>
-            <table className="w-full text-left whitespace-nowrap table-fixed">
-              <thead className="bg-[#F8FAFC]/50 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] border-b border-[#E2E8F0]">
-                <tr>
-                  <th className="px-4 py-3 w-12">
-                    <div className="flex items-center justify-center">
-                      <input 
-                        type="checkbox" 
-                        checked={leads.length > 0 && selectedLeadIds.size === leads.length}
-                        onChange={toggleSelectAll}
+              {/* Mobile card layout — hidden on md+ */}
+              <div className="md:hidden divide-y divide-[#E2E8F0]">
+                {leads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    className={`p-4 flex items-start gap-3 transition-all ${selectedLeadIds.has(lead.id) ? 'bg-[#F0F9FF]' : ''}`}
+                  >
+                    {/* Checkbox */}
+                    <div className="shrink-0 pt-0.5" onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedLeadIds.has(lead.id)}
+                        onChange={() => toggleSelectLead(lead.id)}
                         className="w-4 h-4 text-[#3B82F6] rounded border-[#E2E8F0] focus:ring-[#3B82F6] cursor-pointer transition-all shadow-sm"
                       />
                     </div>
-                  </th>
-                  <th className="px-4 py-3 w-[25%]">Business Name</th>
-                  <th className="px-4 py-3 w-[20%]">Campaign</th>
-                  <th className="px-4 py-3 w-[15%]">Industry</th>
-                  <th className="px-4 py-3 w-[15%]">Verdict</th>
-                  <th className="px-4 py-3 w-[15%]">Status</th>
-                  <th className="px-4 py-3 w-12"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#E2E8F0] overflow-visible">
-                {leads.map((lead) => (
-                  <tr 
-                    key={lead.id} 
-                    className={`transition-all duration-200 group cursor-pointer ${selectedLeadIds.has(lead.id) ? 'bg-[#F0F9FF]' : 'hover:bg-[#F8FAFC]'}`}
-                    onClick={() => toggleSelectLead(lead.id)}
-                  >
-                    <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                      <div className="flex items-center justify-center">
-                        <input 
-                          type="checkbox" 
-                          checked={selectedLeadIds.has(lead.id)}
-                          onChange={() => toggleSelectLead(lead.id)}
-                          className="w-4 h-4 text-[#3B82F6] rounded border-[#E2E8F0] focus:ring-[#3B82F6] cursor-pointer transition-all shadow-sm"
-                        />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link href={`/dashboard/leads/${lead.id}`} className="block" onClick={e => e.stopPropagation()}>
-                        <span className="text-sm font-semibold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors truncate max-w-[200px] block">
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <Link href={`/dashboard/leads/${lead.id}`} className="block" onClick={(e) => e.stopPropagation()}>
+                        <span className="text-sm font-bold text-[#0F172A] block truncate">
                           {lead.business_name}
                         </span>
                       </Link>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Link 
-                        href={`/dashboard/campaigns/${lead.campaign_id}`} 
-                        className="text-[10px] font-semibold text-[#3B82F6] bg-blue-50 px-2 py-1 rounded border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest inline-block truncate max-w-[180px]" 
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {lead.audit_verdict
+                          ? <VerdictBadge verdict={lead.audit_verdict} />
+                          : <span className="text-slate-300 text-xs">—</span>
+                        }
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <StatusSelect leadId={lead.id} currentStatus={lead.status || 'new'} onStatusChange={(id, newStatus) => handleStatusChange(id, newStatus)} />
+                        </div>
+                      </div>
+                      <Link
+                        href={`/dashboard/campaigns/${lead.campaign_id}`}
+                        className="text-[10px] font-semibold text-[#3B82F6] bg-blue-50 px-2 py-1 rounded border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest inline-block truncate max-w-full"
                         onClick={(e) => e.stopPropagation()}
                         title={campaignMap.get(lead.campaign_id) || 'Unknown'}
                       >
                         {campaignMap.get(lead.campaign_id) || 'Unknown'}
                       </Link>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-[#64748B] truncate max-w-[120px]">{lead.category}</td>
-                    <td className="px-4 py-3">
-                      {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-200">—</span>}
-                    </td>
-                    <td className="px-4 py-3 relative overflow-visible" onClick={e => e.stopPropagation()}>
-                       <StatusSelect leadId={lead.id} currentStatus={lead.status || 'new'} onStatusChange={(id, newStatus) => handleStatusChange(id, newStatus)} />
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                       <Link 
-                         href={`/dashboard/leads/${lead.id}`}
-                         className="p-1.5 text-slate-300 group-hover:text-[#3B82F6] group-hover:bg-blue-50 rounded transition-all inline-block"
-                         onClick={e => e.stopPropagation()}
-                       >
-                         <ArrowUpRight className="w-4 h-4" />
-                       </Link>
-                    </td>
-                  </tr>
+                      {lead.category && (
+                        <p className="text-xs text-[#94A3B8] truncate">{lead.category}</p>
+                      )}
+                    </div>
+                    {/* Eye icon */}
+                    <div className="shrink-0">
+                      <Link
+                        href={`/dashboard/leads/${lead.id}`}
+                        className="p-1.5 text-slate-300 hover:text-[#3B82F6] hover:bg-blue-50 rounded transition-all inline-block"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <ArrowUpRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </div>
+
+              {/* Desktop table layout — hidden below md */}
+              <table className="hidden md:table w-full text-left whitespace-nowrap table-fixed">
+                <thead className="bg-[#F8FAFC]/50 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8] border-b border-[#E2E8F0]">
+                  <tr>
+                    <th className="px-4 py-3 w-12">
+                      <div className="flex items-center justify-center">
+                        <input 
+                          type="checkbox" 
+                          checked={leads.length > 0 && selectedLeadIds.size === leads.length}
+                          onChange={toggleSelectAll}
+                          className="w-4 h-4 text-[#3B82F6] rounded border-[#E2E8F0] focus:ring-[#3B82F6] cursor-pointer transition-all shadow-sm"
+                        />
+                      </div>
+                    </th>
+                    <th className="px-4 py-3 w-[25%]">Business Name</th>
+                    <th className="px-4 py-3 w-[20%]">Campaign</th>
+                    <th className="px-4 py-3 w-[15%]">Industry</th>
+                    <th className="px-4 py-3 w-[15%]">Verdict</th>
+                    <th className="px-4 py-3 w-[15%]">Status</th>
+                    <th className="px-4 py-3 w-12"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#E2E8F0] overflow-visible">
+                  {leads.map((lead) => (
+                    <tr 
+                      key={lead.id} 
+                      className={`transition-all duration-200 group cursor-pointer ${selectedLeadIds.has(lead.id) ? 'bg-[#F0F9FF]' : 'hover:bg-[#F8FAFC]'}`}
+                      onClick={() => toggleSelectLead(lead.id)}
+                    >
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-center">
+                          <input 
+                            type="checkbox" 
+                            checked={selectedLeadIds.has(lead.id)}
+                            onChange={() => toggleSelectLead(lead.id)}
+                            className="w-4 h-4 text-[#3B82F6] rounded border-[#E2E8F0] focus:ring-[#3B82F6] cursor-pointer transition-all shadow-sm"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link href={`/dashboard/leads/${lead.id}`} className="block" onClick={e => e.stopPropagation()}>
+                          <span className="text-sm font-semibold text-[#0F172A] group-hover:text-[#3B82F6] transition-colors truncate max-w-[200px] block">
+                            {lead.business_name}
+                          </span>
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Link 
+                          href={`/dashboard/campaigns/${lead.campaign_id}`} 
+                          className="text-[10px] font-semibold text-[#3B82F6] bg-blue-50 px-2 py-1 rounded border border-blue-100 hover:bg-blue-600 hover:text-white transition-all uppercase tracking-widest inline-block truncate max-w-[180px]" 
+                          onClick={(e) => e.stopPropagation()}
+                          title={campaignMap.get(lead.campaign_id) || 'Unknown'}
+                        >
+                          {campaignMap.get(lead.campaign_id) || 'Unknown'}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-[#64748B] truncate max-w-[120px]">{lead.category}</td>
+                      <td className="px-4 py-3">
+                        {lead.audit_verdict ? <VerdictBadge verdict={lead.audit_verdict} /> : <span className="text-slate-200">—</span>}
+                      </td>
+                      <td className="px-4 py-3 relative overflow-visible" onClick={e => e.stopPropagation()}>
+                         <StatusSelect leadId={lead.id} currentStatus={lead.status || 'new'} onStatusChange={(id, newStatus) => handleStatusChange(id, newStatus)} />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                         <Link 
+                           href={`/dashboard/leads/${lead.id}`}
+                           className="p-1.5 text-slate-300 group-hover:text-[#3B82F6] group-hover:bg-blue-50 rounded transition-all inline-block"
+                           onClick={e => e.stopPropagation()}
+                         >
+                           <ArrowUpRight className="w-4 h-4" />
+                         </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
         )}
 
         {/* Pagination Section */}

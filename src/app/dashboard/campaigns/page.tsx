@@ -143,7 +143,96 @@ export default function CampaignsPage() {
 
           <div className="bg-white rounded-[32px] border border-[#E2E8F0] shadow-sm">
             <div className="overflow-visible">
-              <table className="w-full text-left whitespace-nowrap table-fixed">
+
+              {/* Mobile card layout — hidden on md+ */}
+              <div className="md:hidden divide-y divide-[#E2E8F0]">
+                {sortedCampaigns.map((campaign) => {
+                  const maxLeads = campaign.lead_count || 25
+                  const found = campaign.leads_found || 0
+                  const isStale = campaign.status === 'running' && found === 0 && (new Date().getTime() - new Date(campaign.created_at).getTime()) > 10 * 60 * 1000
+                  const displayStatus = isStale ? 'failed' : campaign.status
+
+                  return (
+                    <div key={campaign.id} className="p-4 flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <Link href={`/dashboard/campaigns/${campaign.id}`} className="block mb-1">
+                          <span className="text-sm font-bold text-[#0F172A] block truncate">
+                            {campaign.name}
+                          </span>
+                        </Link>
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-slate-100 text-slate-600 truncate max-w-[120px]">
+                            {campaign.target_industry}
+                          </span>
+                          <span className="text-xs text-[#64748B] truncate">{campaign.location}</span>
+                          <StatusBadge status={displayStatus} />
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-[#64748B]">
+                          <span className="font-bold text-[#0F172A]">{found} {found === 1 ? 'lead' : 'leads'} found</span>
+                          <span>·</span>
+                          <span>{formatDistanceToNow(new Date(campaign.created_at), { addSuffix: true })}</span>
+                        </div>
+                      </div>
+                      <div className="relative shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            e.preventDefault()
+                            setOpenMenuId(openMenuId === campaign.id ? null : campaign.id)
+                          }}
+                          className="p-2 text-slate-400 hover:text-[#0F172A] rounded-xl hover:bg-slate-100 transition-all focus:outline-none"
+                        >
+                          <MoreVertical className="w-5 h-5" />
+                        </button>
+                        {openMenuId === campaign.id && (
+                          <div
+                            className="absolute right-0 top-10 z-[200] w-48 bg-white rounded-xl shadow-xl border border-[#E2E8F0] py-1"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/dashboard/campaigns/${campaign.id}`)
+                                setOpenMenuId(null)
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-[#0F172A] hover:bg-[#F8FAFC] flex items-center gap-2 transition-colors"
+                            >
+                              <Eye className="h-4 w-4 text-[#64748B]" />
+                              View Details
+                            </button>
+                            {campaign.status === 'running' && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleMarkCompleted(campaign.id)
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-emerald-600 hover:bg-emerald-50 flex items-center gap-2 transition-colors"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                                Mark Completed
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setDeleteTarget({ id: campaign.id, name: campaign.name })
+                                setOpenMenuId(null)
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete Campaign
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Desktop table layout — hidden below md */}
+              <table className="hidden md:table w-full text-left whitespace-nowrap table-fixed">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wider w-[35%]">Campaign Name</th>
