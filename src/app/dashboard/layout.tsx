@@ -149,27 +149,29 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </nav>
 
             <div className="p-4 border-t border-[#E2E8F0] space-y-4">
-              <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl p-4 shadow-sm">
-                {billingInfo?.plan ? (
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
-                    {billingInfo.plan} Plan
-                  </p>
-                ) : (
-                  <div className="h-3 w-20 bg-[#E2E8F0] rounded animate-pulse mb-1.5" />
-                )}
-                {(!billingInfo || billingInfo.plan === 'free') ? (
-                  <>
-                    <p className="text-xs text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
-                    <Link href="/dashboard/settings" onClick={() => setIsMobileOpen(false)} className="w-full block py-2 text-center text-xs font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:bg-[#F8FAFC] transition-colors shadow-sm">
-                      Upgrade Plan
-                    </Link>
-                  </>
-                ) : (
-                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs py-1">
-                    <CheckCircle2 className="w-4 h-4" /> Professional Account
-                  </div>
-                )}
-              </div>
+              <Link href="/dashboard/settings" onClick={() => setIsMobileOpen(false)} className="block hover:bg-[#F8FAFC] rounded-xl transition-colors cursor-pointer">
+                <div className="bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl p-4 shadow-sm">
+                  {billingInfo?.plan ? (
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
+                      {billingInfo.plan} Plan
+                    </p>
+                  ) : (
+                    <div className="h-3 w-20 bg-[#E2E8F0] rounded animate-pulse mb-1.5" />
+                  )}
+                  {(!billingInfo || billingInfo.plan === 'free') ? (
+                    <>
+                      <p className="text-xs text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
+                      <div className="w-full block py-2 text-center text-xs font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:bg-[#F8FAFC] transition-colors shadow-sm">
+                        Upgrade Plan
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs py-1">
+                      <CheckCircle2 className="w-4 h-4" /> Professional Account
+                    </div>
+                  )}
+                </div>
+              </Link>
               <div className="flex items-center gap-3 px-2">
                 <UserButton afterSignOutUrl="/" />
                 <span className="text-sm font-bold text-[#0F172A]">{user?.fullName || 'My Account'}</span>
@@ -240,33 +242,33 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {/* Bottom Section */}
         <div className="p-2 border-t border-[#E2E8F0]">
-          {!isCollapsed && (
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }}
-              className="mb-4 p-4 bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl shadow-sm"
-            >
-              {billingInfo?.plan ? (
-                <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
-                  {billingInfo.plan} Plan
-                </p>
-              ) : (
-                <div className="h-3 w-20 bg-[#E2E8F0] rounded animate-pulse mb-1.5" />
-              )}
-              {(!billingInfo || billingInfo.plan === 'free') ? (
-                <>
-                  <p className="text-[11px] text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
-                  <Link href="/dashboard/settings" className="w-full block py-2 text-center text-[11px] font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:border-[#3B82F6] transition-all shadow-sm active:scale-95">
-                    Upgrade Plan
-                  </Link>
-                </>
-              ) : (
-                <div className="flex items-center gap-2 text-emerald-600 font-bold text-[11px] py-1">
-                  <CheckCircle2 className="w-4 h-4" /> Professional Account
-                </div>
-              )}
-            </motion.div>
-          )}
+            <Link href="/dashboard/settings" className="block hover:bg-[#F8FAFC] rounded-xl transition-colors cursor-pointer">
+              <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }}
+                className="mb-4 p-4 bg-gradient-to-br from-[#F8FAFC] to-[#F1F5F9] border border-[#E2E8F0] rounded-2xl shadow-sm"
+              >
+                {billingInfo?.plan ? (
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[#64748B] mb-1">
+                    {billingInfo.plan} Plan
+                  </p>
+                ) : (
+                  <div className="h-3 w-20 bg-[#E2E8F0] rounded animate-pulse mb-1.5" />
+                )}
+                {(!billingInfo || billingInfo.plan === 'free') ? (
+                  <>
+                    <p className="text-[11px] text-[#64748B] mb-3 leading-relaxed">Upgrade to unlock more leads and premium features.</p>
+                    <div className="w-full block py-2 text-center text-[11px] font-bold text-[#3B82F6] bg-white border border-[#E2E8F0] rounded-xl hover:border-[#3B82F6] transition-all shadow-sm active:scale-95">
+                      Upgrade Plan
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-emerald-600 font-bold text-[11px] py-1">
+                    <CheckCircle2 className="w-4 h-4" /> Professional Account
+                  </div>
+                )}
+              </motion.div>
+            </Link>
 
           {/* User Info */}
           <div className={`flex items-center p-2 rounded-xl hover:bg-[#F8FAFC] transition-colors ${isCollapsed ? 'justify-center' : 'gap-3 px-3'}`}>
