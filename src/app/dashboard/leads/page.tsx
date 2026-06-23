@@ -29,6 +29,7 @@ export default function LeadsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [totalCount, setTotalCount] = useState(0)
+  const [plan, setPlan] = useState<string>('free')
   
   const [statusFilter, setStatusFilter] = useState('All')
   const [verdictFilter, setVerdictFilter] = useState('All')
@@ -39,6 +40,15 @@ export default function LeadsPage() {
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set())
 
   const limit = 25
+
+  const isPremium = plan === 'growth' || plan === 'agency'
+
+  useEffect(() => {
+    fetch('/api/billing/info')
+      .then(res => res.json())
+      .then(data => setPlan(data.plan || 'free'))
+      .catch(() => setPlan('free'))
+  }, [])
 
   const fetchLeads = async (page: number) => {
     setLoading(true)
@@ -124,6 +134,10 @@ export default function LeadsPage() {
   }
 
   const handleExportCSV = () => {
+    if (!isPremium) {
+      toast.error('CSV export is available on Growth plan and above. Upgrade in Settings.')
+      return
+    }
     const dataToExport = selectedLeadIds.size > 0 
       ? leads.filter(l => selectedLeadIds.has(l.id))
       : leads
@@ -189,7 +203,11 @@ export default function LeadsPage() {
         </div>
         <button 
           onClick={handleExportCSV}
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#0F172A] text-white text-sm font-bold rounded-xl transition-all shadow-lg hover:bg-slate-800 active:scale-[0.98]"
+          className={`inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold rounded-xl transition-all shadow-lg hover:bg-slate-800 active:scale-[0.98] ${
+            isPremium
+              ? 'bg-[#0F172A] text-white hover:bg-slate-800'
+              : 'bg-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
+          }`}
         >
           <Download className="w-4 h-4" /> 
           {selectedLeadIds.size > 0 ? `Export Selected (${selectedLeadIds.size})` : 'Export All Results'}

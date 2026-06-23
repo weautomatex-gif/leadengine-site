@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { VerdictBadge } from '@/components/ui/VerdictBadge'
 import { CardSkeleton } from '@/components/ui/SkeletonLoader'
-import { ArrowLeft, Copy, ExternalLink, CheckCircle2, Mail, Phone, MapPin, Star } from 'lucide-react'
+import { ArrowLeft, Copy, ExternalLink, CheckCircle2, Mail, Phone, MapPin, Star, Lock } from 'lucide-react'
 
 export default function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -15,6 +15,16 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
   const [status, setStatus] = useState('')
+  const [plan, setPlan] = useState<string>('free')
+
+  const isPremium = plan === 'growth' || plan === 'agency'
+
+  useEffect(() => {
+    fetch('/api/billing/info')
+      .then(res => res.json())
+      .then(data => setPlan(data.plan || 'free'))
+      .catch(() => setPlan('free'))
+  }, [])
 
   useEffect(() => {
     fetch(`/api/leads/${id}`)
@@ -156,42 +166,67 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
               <h3 className="font-bold text-[#0F172A] flex items-center gap-2">
                 <Mail className="w-5 h-5 text-[#3B82F6]" /> Personalised Email Draft
               </h3>
-              {lead.draft_body && (
+              {isPremium && lead.draft_body && (
                 <span className="px-2.5 py-1 bg-[#DBEAFE] text-[#1E40AF] text-[10px] font-bold uppercase tracking-wider rounded-md">Ready to send</span>
               )}
             </div>
             <div className="p-8">
-              {lead.draft_body ? (
-                <>
-                  <div className="mb-6 pb-6 border-b border-[#E2E8F0]">
-                    <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Subject</p>
-                    <div className="flex justify-between items-center group">
-                      <p className="text-base font-bold text-[#0F172A]">{lead.draft_subject || `A quick idea for ${lead.business_name}`}</p>
-                      <button 
-                        onClick={() => {
-                          navigator.clipboard.writeText(lead.draft_subject || `A quick idea for ${lead.business_name}`)
-                          toast.success('Subject copied')
-                        }}
-                        className="text-xs px-2 py-1 bg-white border border-[#E2E8F0] rounded-md text-[#3B82F6] opacity-0 group-hover:opacity-100 transition-all font-bold shadow-sm"
-                      >
-                        Copy
-                      </button>
+              {isPremium ? (
+                lead.draft_body ? (
+                  <>
+                    <div className="mb-6 pb-6 border-b border-[#E2E8F0]">
+                      <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Subject</p>
+                      <div className="flex justify-between items-center group">
+                        <p className="text-base font-bold text-[#0F172A]">{lead.draft_subject || `A quick idea for ${lead.business_name}`}</p>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(lead.draft_subject || `A quick idea for ${lead.business_name}`)
+                            toast.success('Subject copied')
+                          }}
+                          className="text-xs px-2 py-1 bg-white border border-[#E2E8F0] rounded-md text-[#3B82F6] opacity-0 group-hover:opacity-100 transition-all font-bold shadow-sm"
+                        >
+                          Copy
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-3">Body</p>
-                    <div className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap font-medium">
-                      {lead.draft_body}
+                    <div>
+                      <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-3">Body</p>
+                      <div className="text-sm text-[#334155] leading-relaxed whitespace-pre-wrap font-medium">
+                        {lead.draft_body}
+                      </div>
                     </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-[#64748B] text-sm">Draft not available. If this is a new lead, the AI might still be generating it.</p>
                   </div>
-                </>
+                )
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-[#64748B] text-sm">Draft not available. If this is a new lead, the AI might still be generating it.</p>
+                <div className="relative rounded-xl overflow-hidden">
+                  <div className="blur-sm pointer-events-none select-none">
+                    <div className="mb-6 pb-6 border-b border-[#E2E8F0]">
+                      <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2">Subject</p>
+                      <p className="text-base font-bold text-[#0F172A]">Personalised email for your business</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-3">Body</p>
+                      <p className="text-sm text-[#334155] leading-relaxed">
+                        Hi there, We noticed your business could benefit from a modern website that converts visitors into customers. We specialise in building fast, professional websites for businesses just like yours...
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 rounded-xl">
+                    <Lock className="w-6 h-6 text-[#94A3B8] mb-2" />
+                    <p className="text-sm font-semibold text-[#0F172A] mb-1">AI Email Drafts</p>
+                    <p className="text-xs text-[#64748B] mb-3">Available on Growth plan and above</p>
+                    <a href="/dashboard/settings" className="text-xs font-semibold text-[#3B82F6] hover:underline">
+                      Upgrade Plan →
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
-            {lead.draft_body && (
+            {isPremium && lead.draft_body && (
               <div className="px-8 py-5 border-t border-[#E2E8F0] bg-[#F8FAFC] flex gap-3">
                 <button 
                   onClick={() => {

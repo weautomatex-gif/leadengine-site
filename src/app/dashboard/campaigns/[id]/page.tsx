@@ -25,14 +25,15 @@ import {
   Star,
   FileText,
   Users,
-  Zap
+  Zap,
+  Lock
 } from 'lucide-react'
 
 import { createPortal } from 'react-dom'
 import { StatusSelect } from '@/components/ui/StatusSelect'
 
 // Slide-over Panel Component
-function LeadDetailPanel({ lead, isOpen, onClose, onUpdateStatus, onUpdateNotes }: any) {
+function LeadDetailPanel({ lead, isOpen, onClose, onUpdateStatus, onUpdateNotes, isPremium }: any) {
   const [notes, setNotes] = useState(lead?.notes || '')
   
   useEffect(() => {
@@ -129,34 +130,53 @@ function LeadDetailPanel({ lead, isOpen, onClose, onUpdateStatus, onUpdateNotes 
           </div>
 
           {/* Email Draft Section */}
-          {lead.draft_body && (
-            <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl overflow-hidden shadow-sm">
-              <div className="px-5 py-3 bg-[#DBEAFE] border-b border-[#BFDBFE] flex items-center justify-between">
-                <h4 className="text-[10px] font-extrabold text-[#1E40AF] uppercase tracking-widest flex items-center gap-2">
-                  <FileText className="w-3.5 h-3.5" /> Personalized Draft
-                </h4>
-                <button 
-                  onClick={() => {
-                    const text = lead.draft_subject ? `Subject: ${lead.draft_subject}\n\n${lead.draft_body}` : lead.draft_body;
-                    navigator.clipboard.writeText(text)
-                    toast.success('📋 Draft copied to clipboard')
-                  }}
-                  className="text-[10px] font-bold text-[#3B82F6] bg-white px-2 py-1 rounded-lg border border-[#BFDBFE] shadow-sm hover:bg-[#3B82F6] hover:text-white transition-all active:scale-95 uppercase"
-                >
-                  Copy All
-                </button>
-              </div>
-              <div className="p-5">
-                {lead.draft_subject && (
-                  <div className="mb-4">
-                    <p className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-1">Subject Line</p>
-                    <p className="text-sm font-bold text-[#0F172A] leading-tight">{lead.draft_subject}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-1">Email Body</p>
-                  <div className="text-sm text-[#0F172A] whitespace-pre-wrap font-medium leading-relaxed">{lead.draft_body}</div>
+          {isPremium ? (
+            lead.draft_body && (
+              <div className="bg-[#EFF6FF] border border-[#BFDBFE] rounded-2xl overflow-hidden shadow-sm">
+                <div className="px-5 py-3 bg-[#DBEAFE] border-b border-[#BFDBFE] flex items-center justify-between">
+                  <h4 className="text-[10px] font-extrabold text-[#1E40AF] uppercase tracking-widest flex items-center gap-2">
+                    <FileText className="w-3.5 h-3.5" /> Personalized Draft
+                  </h4>
+                  <button 
+                    onClick={() => {
+                      const text = lead.draft_subject ? `Subject: ${lead.draft_subject}\n\n${lead.draft_body}` : lead.draft_body;
+                      navigator.clipboard.writeText(text)
+                      toast.success('📋 Draft copied to clipboard')
+                    }}
+                    className="text-[10px] font-bold text-[#3B82F6] bg-white px-2 py-1 rounded-lg border border-[#BFDBFE] shadow-sm hover:bg-[#3B82F6] hover:text-white transition-all active:scale-95 uppercase"
+                  >
+                    Copy All
+                  </button>
                 </div>
+                <div className="p-5">
+                  {lead.draft_subject && (
+                    <div className="mb-4">
+                      <p className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-1">Subject Line</p>
+                      <p className="text-sm font-bold text-[#0F172A] leading-tight">{lead.draft_subject}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-1">Email Body</p>
+                    <div className="text-sm text-[#0F172A] whitespace-pre-wrap font-medium leading-relaxed">{lead.draft_body}</div>
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="relative rounded-2xl overflow-hidden border border-[#BFDBFE]">
+              <div className="blur-sm pointer-events-none select-none bg-[#EFF6FF] p-5">
+                <p className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-1">Subject Line</p>
+                <p className="text-sm font-bold text-[#0F172A] mb-4">Personalised email for your business</p>
+                <p className="text-[10px] font-bold text-[#3B82F6] uppercase tracking-wider mb-1">Email Body</p>
+                <p className="text-sm text-[#0F172A] leading-relaxed">Hi there, We noticed your business could benefit from a modern website that converts visitors into customers. We specialise in building fast, professional websites for businesses just like yours...</p>
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/80 rounded-xl">
+                <Lock className="w-6 h-6 text-[#94A3B8] mb-2" />
+                <p className="text-sm font-semibold text-[#0F172A] mb-1">AI Email Drafts</p>
+                <p className="text-xs text-[#64748B] mb-3">Available on Growth plan and above</p>
+                <a href="/dashboard/settings" className="text-xs font-semibold text-[#3B82F6] hover:underline">
+                  Upgrade Plan →
+                </a>
               </div>
             </div>
           )}
@@ -211,8 +231,18 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   const [campaign, setCampaign] = useState<any>(null)
   const [leads, setLeads] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [plan, setPlan] = useState<string>('free')
   
   const [selectedLead, setSelectedLead] = useState<any | null>(null)
+
+  const isPremium = plan === 'growth' || plan === 'agency'
+
+  useEffect(() => {
+    fetch('/api/billing/info')
+      .then(res => res.json())
+      .then(data => setPlan(data.plan || 'free'))
+      .catch(() => setPlan('free'))
+  }, [])
 
   useEffect(() => {
     fetch(`/api/campaigns/${id}`)
@@ -268,6 +298,10 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
   }
 
   const handleExportCSV = () => {
+    if (!isPremium) {
+      toast.error('CSV export is available on Growth plan and above. Upgrade in Settings.')
+      return
+    }
     if (!leads || leads.length === 0) return toast.error('No leads to export')
     
     // Custom CSV Generation logic
@@ -348,7 +382,11 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
         </div>
         <button 
           onClick={handleExportCSV}
-          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#0F172A] text-white text-sm font-bold rounded-xl transition-all shadow-lg hover:bg-slate-800 active:scale-[0.98] w-full lg:w-auto"
+          className={`inline-flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold rounded-xl transition-all shadow-lg w-full lg:w-auto ${
+            isPremium
+              ? 'bg-[#0F172A] text-white hover:bg-slate-800 active:scale-[0.98]'
+              : 'bg-slate-200 text-slate-400 opacity-50 cursor-not-allowed'
+          }`}
         >
           <Download className="w-4 h-4" /> Export Leads to CSV
         </button>
@@ -455,6 +493,7 @@ export default function CampaignDetailPage({ params }: { params: Promise<{ id: s
         onClose={() => setSelectedLead(null)} 
         onUpdateStatus={handleStatusChange}
         onUpdateNotes={handleNotesChange}
+        isPremium={isPremium}
       />
     </div>
   )

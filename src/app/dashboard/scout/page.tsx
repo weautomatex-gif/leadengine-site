@@ -15,7 +15,8 @@ import {
   ShieldCheck,
   AlertCircle,
   CheckCircle2,
-  Circle
+  Circle,
+  Info
 } from 'lucide-react'
 import { GooeyLoader } from '@/components/ui/GooeyLoader'
 
@@ -40,6 +41,12 @@ interface BillingInfo {
   has_subscription: boolean;
 }
 
+const requestNotificationPermission = async () => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    await Notification.requestPermission()
+  }
+}
+
 export default function ScoutRunPage() {
   const router = useRouter()
   
@@ -54,6 +61,9 @@ export default function ScoutRunPage() {
   const [leadsFound, setLeadsFound] = useState(0)
   const [currentPhase, setCurrentPhase] = useState(0)
   const [showFallbackButton, setShowFallbackButton] = useState(false)
+
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [hasFailed, setHasFailed] = useState(false)
   
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null)
   const [fetchingBilling, setFetchingBilling] = useState(true)
@@ -78,8 +88,25 @@ export default function ScoutRunPage() {
     }
   }, [industry, customIndustry, location])
 
+  // Elapsed timer — counts up while running and not failed
   useEffect(() => {
-    if (status !== 'running' || !activeCampaignId) {
+    if (status !== 'running' || hasFailed) return
+    const timer = setInterval(() => {
+      setElapsedSeconds(prev => prev + 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [status, hasFailed])
+
+  // Timeout after 5 minutes
+  useEffect(() => {
+    if (elapsedSeconds >= 300 && !hasFailed && status === 'running') {
+      setHasFailed(true)
+    }
+  }, [elapsedSeconds, hasFailed, status])
+
+  // Polling
+  useEffect(() => {
+    if (status !== 'running' || !activeCampaignId || hasFailed) {
       setShowFallbackButton(false)
       return
     }
@@ -102,28 +129,45 @@ export default function ScoutRunPage() {
         setLeadsFound(currentLeads.length)
         
         const campaign = data.campaign
+
+        // Check for failed status from API
+        if (campaign?.status === 'failed') {
+          clearInterval(interval)
+          setHasFailed(true)
+          return
+        }
           
-        // "Drafting personalized emails..." active once leads exist and some have draft_body populated
+        // "Drafting personalized emails..." active once some have draft_body populated
         const hasDrafts = currentLeads.some((l: any) => l.draft_body)
         if (hasDrafts) {
           setCurrentPhase(prev => Math.max(prev, 2))
         }
 
         const maxLeads = campaign?.lead_count || leadCount
-        const isTimeout = timeElapsed > 3 * 60 * 1000 // 3 minutes timeout
-        const isComplete = campaign?.status === 'completed' || currentLeads.length >= maxLeads || isTimeout
+        const isComplete = campaign?.status === 'completed' || currentLeads.length >= maxLeads
 
         if (isComplete) {
           clearInterval(interval)
           setCurrentPhase(3) // All phases complete
+
+          // Fire browser notification if tab is hidden
+          if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
+            const notification = new Notification('Scout Complete! 🎯', {
+              body: `Your campaign found ${currentLeads.length} leads. Click to view.`,
+              icon: '/favicon.svg',
+              tag: 'scout-complete',
+            })
+            notification.onclick = () => {
+              window.focus()
+              window.location.href = `/dashboard/campaigns/${activeCampaignId}`
+              notification.close()
+            }
+          }
+
           setTimeout(() => {
             toast.success('✓ Campaign ready!')
             router.push(`/dashboard/campaigns/${activeCampaignId}`)
           }, 2000)
-        } else if (campaign?.status === 'failed') {
-          clearInterval(interval)
-          toast.error('Scout run failed.')
-          setStatus('idle')
         }
       } catch (err) {
         console.error('Polling error:', err)
@@ -131,7 +175,7 @@ export default function ScoutRunPage() {
     }, 5000)
 
     return () => clearInterval(interval)
-  }, [status, activeCampaignId, router, leadCount])
+  }, [status, activeCampaignId, router, leadCount, hasFailed])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -182,9 +226,14 @@ export default function ScoutRunPage() {
       }
     }
 
+    // Request notification permission when scout starts
+    await requestNotificationPermission()
+
     setStatus('running')
     setCurrentPhase(0)
     setLeadsFound(0)
+    setElapsedSeconds(0)
+    setHasFailed(false)
 
     try {
       const response = await fetch('/api/scout/run', {
@@ -303,6 +352,19 @@ export default function ScoutRunPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Website Agency info box */}
+              {businessType === 'website_agency' && (
+                <div className="mt-2 p-4 bg-[#EFF6FF] border border-[#BFDBFE] rounded-xl flex items-start gap-3">
+                  <Info className="w-5 h-5 text-[#3B82F6] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-[#1E40AF] mb-1">Filtered Results</p>
+                    <p className="text-xs text-[#3B82F6] leading-relaxed">
+                      This scout type only returns businesses with a poor or missing website — perfect for web agency outreach. If you request 50 leads but only 15 are returned, it means the remaining businesses already have a strong web presence and were filtered out. You are only charged for leads actually returned.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -401,68 +463,119 @@ export default function ScoutRunPage() {
             key="progress"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl border border-[#E2E8F0] p-10 shadow-sm flex flex-col items-center space-y-8"
+            className="bg-white rounded-3xl border border-[#E2E8F0] p-10 shadow-sm flex flex-col items-center space-y-6"
           >
-            {/* Animated Radar - Scaled Down */}
-            <GooeyLoader className="mb-6" />
-
-            <div className="text-center space-y-1">
-              <h3 className="text-xl font-black text-[#0F172A] tracking-tight">AI Scout in Progress</h3>
-              <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em]">Scanning the deep web for leads...</p>
-            </div>
-
-            {/* Compact Stepper Layout */}
-            <div className="w-full space-y-3 pt-2">
-               {PROGRESS_PHASES.map((phase, idx) => {
-                  const isActive = currentPhase === idx;
-                  const isCompleted = currentPhase > idx;
-                  
-                  return (
-                    <div 
-                      key={phase.id} 
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all border ${
-                        isActive ? 'bg-blue-50/50 border-blue-100' : 'bg-transparent border-transparent'
-                      }`}
-                    >
-                       <div className={`shrink-0 ${isActive ? 'text-[#3B82F6]' : isCompleted ? 'text-emerald-500' : 'text-slate-300'}`}>
-                          {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : isActive ? <div className="w-5 h-5 flex items-center justify-center"><Loader2 className="w-4 h-4 animate-spin" /></div> : <Circle className="w-5 h-5 fill-slate-100" />}
-                       </div>
-                       <span className={`text-xs font-bold tracking-tight ${isActive ? 'text-[#0F172A]' : isCompleted ? 'text-[#0F172A] opacity-80' : 'text-slate-400'}`}>
-                          {phase.label}
-                       </span>
-                       {isActive && (
-                         <div className="ml-auto text-[10px] font-black text-[#3B82F6] bg-white px-2 py-1 rounded-lg border border-blue-100 shadow-sm">
-                            {leadsFound} FOUND
-                         </div>
-                       )}
-                    </div>
-                  )
-               })}
-            </div>
-
-            {/* Fallback Button */}
-            {showFallbackButton && (
-              <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="w-full text-center pb-2">
-                <button 
-                  onClick={() => router.push(`/dashboard/campaigns/${activeCampaignId}`)}
-                  className="text-xs font-bold text-[#3B82F6] hover:text-[#2563EB] transition-colors bg-blue-50/50 px-4 py-2 rounded-full border border-blue-100"
-                >
-                  Taking longer than expected? View your campaign &rarr;
-                </button>
-              </motion.div>
-            )}
-
-            {/* Subtle Credits Footer */}
-            {!fetchingBilling && billingInfo ? (
-               <div className="pt-4 border-t border-slate-100 w-full text-center">
-                  <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">
-                     Up to {leadCount} leads · {(billingInfo?.credits_limit ?? 0) - (billingInfo?.credits_used ?? 0)} leads remaining this month
-                  </p>
-               </div>
-            ) : (
-              <div className="pt-4 border-t border-slate-100 w-full flex justify-center">
-                 <div className="h-2 w-48 bg-slate-50 rounded animate-pulse" />
+            {hasFailed ? (
+              /* Error State */
+              <div className="text-center py-4 w-full">
+                <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-lg font-bold text-[#0F172A] mb-2">Scout Run Failed</h3>
+                <p className="text-sm text-[#64748B] mb-6 max-w-sm mx-auto leading-relaxed">
+                  The workflow didn't return results. This could be due to the niche/location combination or a temporary issue. Please try a different search or try again later.
+                </p>
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    onClick={() => {
+                      setHasFailed(false)
+                      setElapsedSeconds(0)
+                      setStatus('idle')
+                    }}
+                    className="px-5 py-2.5 text-sm font-semibold border border-[#E2E8F0] rounded-xl hover:bg-[#F8FAFC] text-[#0F172A] transition-colors"
+                  >
+                    Try Again
+                  </button>
+                  <a
+                    href="/dashboard/campaigns"
+                    className="px-5 py-2.5 text-sm font-semibold bg-[#3B82F6] hover:bg-[#2563EB] text-white rounded-xl transition-colors"
+                  >
+                    View Campaigns
+                  </a>
+                </div>
               </div>
+            ) : (
+              <>
+                {/* Animated Radar */}
+                <GooeyLoader className="mb-2" />
+
+                <div className="text-center space-y-1">
+                  <h3 className="text-xl font-black text-[#0F172A] tracking-tight">AI Scout in Progress</h3>
+                  <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-[0.2em]">Scanning the deep web for leads...</p>
+                </div>
+
+                {/* Progress messages */}
+                <div className="text-center">
+                  <p className="text-sm text-[#64748B] mb-1">Sit tight — this usually takes 2–3 minutes</p>
+                  <p className="text-xs text-[#94A3B8]">
+                    We're scanning Google Maps, verifying contacts, and drafting personalised emails for each lead.
+                  </p>
+                </div>
+
+                {/* Compact Stepper Layout */}
+                <div className="w-full space-y-3">
+                   {PROGRESS_PHASES.map((phase, idx) => {
+                      const isActive = currentPhase === idx;
+                      const isCompleted = currentPhase > idx;
+                      
+                      return (
+                        <div 
+                          key={phase.id} 
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all border ${
+                            isActive ? 'bg-blue-50/50 border-blue-100' : 'bg-transparent border-transparent'
+                          }`}
+                        >
+                           <div className={`shrink-0 ${isActive ? 'text-[#3B82F6]' : isCompleted ? 'text-emerald-500' : 'text-slate-300'}`}>
+                              {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : isActive ? <div className="w-5 h-5 flex items-center justify-center"><Loader2 className="w-4 h-4 animate-spin" /></div> : <Circle className="w-5 h-5 fill-slate-100" />}
+                           </div>
+                           <span className={`text-xs font-bold tracking-tight ${isActive ? 'text-[#0F172A]' : isCompleted ? 'text-[#0F172A] opacity-80' : 'text-slate-400'}`}>
+                              {phase.label}
+                           </span>
+                           {isActive && (
+                             <div className="ml-auto text-[10px] font-black text-[#3B82F6] bg-white px-2 py-1 rounded-lg border border-blue-100 shadow-sm">
+                                {leadsFound} FOUND
+                             </div>
+                           )}
+                        </div>
+                      )
+                   })}
+                </div>
+
+                {/* Elapsed timer */}
+                <p className="text-xs text-[#94A3B8] text-center">
+                  Running for {Math.floor(elapsedSeconds / 60)}m {elapsedSeconds % 60}s
+                </p>
+
+                {/* Navigate away message */}
+                <p className="text-xs text-[#94A3B8] text-center italic">
+                  You can navigate away — we'll notify you when your scout is complete.
+                </p>
+
+                {/* Fallback Button */}
+                {showFallbackButton && (
+                  <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className="w-full text-center pb-2">
+                    <button 
+                      onClick={() => router.push(`/dashboard/campaigns/${activeCampaignId}`)}
+                      className="text-xs font-bold text-[#3B82F6] hover:text-[#2563EB] transition-colors bg-blue-50/50 px-4 py-2 rounded-full border border-blue-100"
+                    >
+                      Taking longer than expected? View your campaign &rarr;
+                    </button>
+                  </motion.div>
+                )}
+
+                {/* Subtle Credits Footer */}
+                {!fetchingBilling && billingInfo ? (
+                   <div className="pt-4 border-t border-slate-100 w-full text-center">
+                      <p className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest">
+                         Up to {leadCount} leads · {(billingInfo?.credits_limit ?? 0) - (billingInfo?.credits_used ?? 0)} leads remaining this month
+                      </p>
+                   </div>
+                ) : (
+                  <div className="pt-4 border-t border-slate-100 w-full flex justify-center">
+                     <div className="h-2 w-48 bg-slate-50 rounded animate-pulse" />
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         )}
