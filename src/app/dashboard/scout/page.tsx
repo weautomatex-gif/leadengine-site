@@ -149,6 +149,7 @@ export default function ScoutRunPage() {
         if (isComplete) {
           clearInterval(interval)
           setCurrentPhase(3) // All phases complete
+          localStorage.removeItem('active_scout') // Layout polling no longer needed
 
           // Fire browser notification if tab is hidden
           if (document.hidden && 'Notification' in window && Notification.permission === 'granted') {
@@ -255,6 +256,13 @@ export default function ScoutRunPage() {
 
       const data = await response.json()
       setActiveCampaignId(data.campaignId)
+
+      // Persist active scout so the layout can poll from any dashboard page
+      localStorage.setItem('active_scout', JSON.stringify({
+        campaignId: data.campaignId,
+        campaignName: campaignName || 'New Campaign',
+        startedAt: Date.now(),
+      }))
     } catch (error: any) {
       console.error(error)
       setStatus('idle')
@@ -481,6 +489,7 @@ export default function ScoutRunPage() {
                       setHasFailed(false)
                       setElapsedSeconds(0)
                       setStatus('idle')
+                      localStorage.removeItem('active_scout')
                     }}
                     className="px-5 py-2.5 text-sm font-semibold border border-[#E2E8F0] rounded-xl hover:bg-[#F8FAFC] text-[#0F172A] transition-colors"
                   >

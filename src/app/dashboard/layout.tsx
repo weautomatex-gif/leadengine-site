@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { UserButton, useUser } from '@clerk/nextjs'
-import { Toaster } from 'sonner'
+import { Toaster, toast } from 'sonner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   BarChart3, 
@@ -37,6 +37,7 @@ interface BillingInfo {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { user } = useUser()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -69,6 +70,61 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     fetch('/api/auth/ensure-user', { method: 'POST' })
       .catch(console.error)
+  }, [])
+
+  // Background scout polling — runs across all dashboard pages
+  useEffect(() => {
+    const checkScout = async () => {
+      try {
+        const raw = localStorage.getItem('active_scout')
+        if (!raw) return
+
+        const { campaignId, campaignName, startedAt } = JSON.parse(raw)
+
+        // Clear if older than 10 minutes (timed out / abandoned)
+        if (Date.now() - startedAt > 600000) {
+          localStorage.removeItem('active_scout')
+          return
+        }
+
+        const res = await fetch(`/api/campaigns/${campaignId}`)
+        if (!res.ok) return
+        const data = await res.json()
+
+        if (data?.campaign?.status === 'completed') {
+          localStorage.removeItem('active_scout')
+
+          // Browser notification (fires even if user is on another tab)
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const n = new Notification('Scout Complete! 🎯', {
+              body: `${campaignName} has finished. Click to view results.`,
+              icon: '/favicon.svg',
+              tag: 'scout-complete',
+            })
+            n.onclick = () => {
+              window.focus()
+              window.location.href = `/dashboard/campaigns/${campaignId}`
+            }
+          }
+
+          // In-app toast with action button
+          toast.success('Scout complete! Your leads are ready.', {
+            duration: 10000,
+            action: {
+              label: 'View Campaign',
+              onClick: () => router.push(`/dashboard/campaigns/${campaignId}`),
+            },
+          })
+        }
+      } catch (err) {
+        // Silently ignore polling errors — non-critical background task
+        console.error('Background scout poll error:', err)
+      }
+    }
+
+    checkScout()
+    const interval = setInterval(checkScout, 15000)
+    return () => clearInterval(interval)
   }, [])
 
   const toggleCollapse = () => {
