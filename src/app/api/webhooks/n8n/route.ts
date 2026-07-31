@@ -56,19 +56,11 @@ export async function POST(req: Request) {
 
       insertedLeadsCount = insertedLeads?.length || leadsToInsert.length
 
-      // Increment credits_used on user by the number of inserted leads
-      const { data: user } = await supabase
-        .from('users')
-        .select('credits_used')
-        .eq('id', campaign.user_id)
-        .single()
-
-      if (user) {
-        await supabase
-          .from('users')
-          .update({ credits_used: (user.credits_used || 0) + insertedLeadsCount })
-          .eq('id', campaign.user_id)
-      }
+      // Increment credits_used atomically to avoid race conditions on concurrent webhooks
+      await supabase.rpc('increment_user_credits', {
+        p_user_id: campaign.user_id,
+        p_amount: insertedLeadsCount
+      })
     }
 
     // Always update campaign status to completed regardless of lead count
