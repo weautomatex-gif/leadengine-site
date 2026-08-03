@@ -119,14 +119,22 @@ function LeadDetailPanel({ lead, isOpen, onClose, onUpdateStatus, onUpdateNotes,
              </div>
              <div className="flex items-center justify-between p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0]">
                 <VerdictBadge verdict={lead.audit_verdict} />
-                <span className="text-lg font-black text-[#0F172A]">{lead.audit_score || '35'}<span className="text-[10px] font-bold text-[#94A3B8]">/100</span></span>
+                {lead.audit_verdict === 'NO_SITE' ? (
+                  <span className="text-sm font-semibold text-[#64748B]">No website found</span>
+                ) : (
+                  <span className="text-lg font-black text-[#0F172A]">{lead.audit_score ?? '35'}<span className="text-[10px] font-bold text-[#94A3B8]">/100</span></span>
+                )}
              </div>
-             <div className="space-y-2">
-                <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-1">Key Observations</p>
-                <div className="text-xs text-[#64748B] font-medium leading-relaxed italic border-l-2 border-[#E2E8F0] pl-3">
-                   "{lead.audit_reason_1 || 'The website lacks a clear call-to-action and appears outdated, which may be costing them potential bookings.'}"
-                </div>
-             </div>
+             {lead.audit_verdict === 'NO_SITE' ? (
+               <p className="text-xs text-[#64748B] font-medium">No website found for this business.</p>
+             ) : (
+               <div className="space-y-2">
+                  <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-1">Key Observations</p>
+                  <div className="text-xs text-[#64748B] font-medium leading-relaxed italic border-l-2 border-[#E2E8F0] pl-3">
+                     "{lead.audit_reason_1 || 'The website lacks a clear call-to-action and appears outdated, which may be costing them potential bookings.'}"
+                  </div>
+               </div>
+             )}
           </div>
 
           {/* Email Draft Section */}

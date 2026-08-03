@@ -275,24 +275,33 @@ export default function LeadDetailPage({ params }: { params: Promise<{ id: strin
           {lead.audit_verdict && (
             <div className="bg-white rounded-2xl border border-[#E2E8F0] p-6 shadow-sm">
               <h3 className="font-bold text-[#0F172A] mb-4">AI Audit Result</h3>
-              <div className="flex items-center justify-between mb-5 pb-5 border-b border-[#E2E8F0]">
-                <VerdictBadge verdict={lead.audit_verdict} />
-                <span className="text-2xl font-extrabold text-[#0F172A] tracking-tight">{lead.audit_score || '35'}<span className="text-sm font-semibold text-[#94A3B8]">/100</span></span>
-              </div>
-              <ul className="space-y-3 text-sm text-[#64748B] font-medium">
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span> 
-                  <span className="leading-snug">{lead.audit_reason_1 || 'Website not mobile responsive'}</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span> 
-                  <span className="leading-snug">{lead.audit_reason_2 || 'No clear call to action on homepage'}</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="text-amber-500 font-bold shrink-0 mt-0.5">!</span> 
-                  <span className="leading-snug">{lead.audit_reason_3 || 'Slow page load speed detected'}</span>
-                </li>
-              </ul>
+              {lead.audit_verdict === 'NO_SITE' ? (
+                <div className="flex items-center justify-between">
+                  <VerdictBadge verdict={lead.audit_verdict} />
+                  <span className="text-sm font-semibold text-[#64748B]">No website found</span>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-5 pb-5 border-b border-[#E2E8F0]">
+                    <VerdictBadge verdict={lead.audit_verdict} />
+                    <span className="text-2xl font-extrabold text-[#0F172A] tracking-tight">{lead.audit_score ?? '35'}<span className="text-sm font-semibold text-[#94A3B8]">/100</span></span>
+                  </div>
+                  <ul className="space-y-3 text-sm text-[#64748B] font-medium">
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span> 
+                      <span className="leading-snug">{lead.audit_reason_1 || 'Website not mobile responsive'}</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-red-500 font-bold shrink-0 mt-0.5">✕</span> 
+                      <span className="leading-snug">{lead.audit_reason_2 || 'No clear call to action on homepage'}</span>
+                    </li>
+                    <li className="flex items-start gap-2.5">
+                      <span className="text-amber-500 font-bold shrink-0 mt-0.5">!</span> 
+                      <span className="leading-snug">{lead.audit_reason_3 || 'Slow page load speed detected'}</span>
+                    </li>
+                  </ul>
+                </>
+              )}
             </div>
           )}
 

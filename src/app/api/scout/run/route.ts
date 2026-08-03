@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { createServerClient } from '@/lib/supabase'
+import { PLANS, PlanKey } from '@/lib/stripe'
 
 export async function POST(req: Request) {
   try {
@@ -52,6 +53,28 @@ export async function POST(req: Request) {
     // Check credits
     if (user.credits_used >= user.credits_limit) {
       return NextResponse.json({ error: 'Credit limit reached' }, { status: 403 })
+    }
+
+    // Enforce plan scout/campaign limit
+    const planKey = (user.plan in PLANS ? user.plan : 'free') as PlanKey
+    const scoutsLimit = PLANS[planKey].scouts_limit
+    const { count: campaignCount, error: countError } = await supabase
+      .from('campaigns')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+
+    if (countError) {
+      console.error('Error counting campaigns:', countError)
+      return NextResponse.json({ error: 'Failed to verify scout limit' }, { status: 500 })
+    }
+
+    if ((campaignCount ?? 0) >= scoutsLimit) {
+      return NextResponse.json(
+        {
+          error: `Scout limit reached. Your ${PLANS[planKey].name} plan allows ${scoutsLimit} scout campaigns.`,
+        },
+        { status: 403 }
+      )
     }
 
     // Create campaign record
