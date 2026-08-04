@@ -63,15 +63,11 @@ export async function POST(req: Request) {
       })
     }
 
-    // Always update campaign status to completed regardless of lead count
-    await supabase
-      .from('campaigns')
-      .update({
-        status: 'completed',
-        leads_found: insertedLeadsCount,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('id', campaign_id)
+    // Accumulate leads_found across multiple webhook calls for the same campaign
+    await supabase.rpc('increment_campaign_leads_found', {
+      p_campaign_id: campaign_id,
+      p_amount: insertedLeadsCount
+    })
 
     return NextResponse.json({ success: true, inserted: insertedLeadsCount }, { status: 200 })
   } catch (error) {
